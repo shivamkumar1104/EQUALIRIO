@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -16,10 +16,13 @@ import BookingModal from './components/BookingModal';
 import TableReservationModal from './components/TableReservationModal';
 import ReviewModal from './components/ReviewModal';
 import Toast from './components/Toast';
-import RegisterTest from './components/RegisterTest';
 import AuthModal from './components/AuthModal';
+import MyBookingsModal from './components/MyBookingsModal';
+import AdminDashboardModal from './components/AdminDashboardModal';
+import SpaBookingModal from './components/SpaBookingModal';
 
-import { REVIEWS_DATA } from './data/hotelData';
+import { REVIEWS_DATA, HOTEL_INFO } from './data/hotelData';
+import { reviewsAPI, hotelAPI } from './services/api';
 
 export default function App() {
   // User Auth State
@@ -36,6 +39,7 @@ export default function App() {
   // Global States
   const [currency, setCurrency] = useState('IND');
   const [toastMessage, setToastMessage] = useState(null);
+  const [hotelInfo, setHotelInfo] = useState(HOTEL_INFO);
 
   // Booking Modal State
   const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -51,6 +55,56 @@ export default function App() {
   // Review Modal State
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewsList, setReviewsList] = useState(REVIEWS_DATA);
+
+  // Live Fetch on mount
+  useEffect(() => {
+    let isMounted = true;
+    reviewsAPI.getAll({ limit: 12 })
+      .then((res) => {
+        if (!isMounted) return;
+        const fetched = res.data?.reviews;
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          setReviewsList(fetched);
+        }
+      })
+      .catch((err) => {
+        console.warn('Live reviews fetch fallback:', err.message);
+      });
+
+    hotelAPI.getInfo()
+      .then((res) => {
+        if (!isMounted) return;
+        const fetched = res.data?.hotel;
+        if (fetched) {
+          setHotelInfo((prev) => ({
+            ...prev,
+            name: fetched.name || prev.name,
+            tagline: fetched.tagline || prev.tagline,
+            subheading: fetched.subheading || prev.subheading,
+            location: fetched.location || prev.location,
+            address: fetched.address || prev.address,
+            phone: fetched.contact?.phone || prev.phone,
+            email: fetched.contact?.email || prev.email,
+            rating: fetched.stats?.rating || prev.rating,
+            reviewCount: fetched.stats?.reviewCount || prev.reviewCount,
+          }));
+        }
+      })
+      .catch((err) => {
+        console.warn('Hotel info fetch fallback:', err.message);
+      });
+
+    return () => { isMounted = false; };
+  }, []);
+
+  // My Bookings & Reservations Dashboard State
+  const [isMyBookingsOpen, setIsMyBookingsOpen] = useState(false);
+
+  // Admin Management Portal State
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+
+  // Spa & Sanctuary Wellness Booking State
+  const [isSpaModalOpen, setIsSpaModalOpen] = useState(false);
 
   // Handlers
   const handleOpenBooking = (data = null) => {
@@ -100,12 +154,15 @@ export default function App() {
         user={user}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
+        onOpenMyBookings={() => setIsMyBookingsOpen(true)}
+        onOpenAdmin={() => setIsAdminOpen(true)}
       />
 
       {/* Main Content Sections */}
       <main>
         {/* Hero Banner with Quick Search */}
         <Hero
+          hotelInfo={hotelInfo}
           onSearchBooking={(searchData) => handleOpenBooking(searchData)}
         />
 
@@ -122,6 +179,7 @@ export default function App() {
         {/* Amenities & VIP Privileges */}
         <Amenities
           onOpenInquiry={(title) => handleExperienceInquiry(title)}
+          onOpenSpa={() => setIsSpaModalOpen(true)}
         />
 
         {/* Michelin Dining & Lounges */}
@@ -146,7 +204,9 @@ export default function App() {
 
       {/* Footer */}
       <Footer
+        hotelInfo={hotelInfo}
         onToast={(msg) => setToastMessage(msg)}
+        onOpenAuth={() => setIsAuthOpen(true)}
       />
 
       {/* MODALS */}
@@ -174,6 +234,7 @@ export default function App() {
         isOpen={isTableModalOpen}
         onClose={() => setIsTableModalOpen(false)}
         restaurantName={tableRestaurant}
+        user={user}
         onSuccess={(msg) => setToastMessage(msg)}
       />
 
@@ -197,9 +258,31 @@ export default function App() {
         onSuccess={handleAuthSuccess}
       />
 
-      {/* Temporary Backend Register API Tester */}
-      <RegisterTest />
+      {/* 7. Guest Stays & Dining Portfolio Dashboard */}
+      <MyBookingsModal
+        isOpen={isMyBookingsOpen}
+        onClose={() => setIsMyBookingsOpen(false)}
+        user={user}
+        currency={currency}
+        onOpenBooking={() => handleOpenBooking()}
+      />
 
+      {/* 8. Management Operations Admin Dashboard */}
+      <AdminDashboardModal
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+        user={user}
+        currency={currency}
+      />
+
+      {/* 9. Aurelia Sanctuary Spa & Wellness Booking Modal */}
+      <SpaBookingModal
+        isOpen={isSpaModalOpen}
+        onClose={() => setIsSpaModalOpen(false)}
+        user={user}
+        currency={currency}
+        onSuccess={(msg) => setToastMessage(msg)}
+      />
     </div>
   );
 }

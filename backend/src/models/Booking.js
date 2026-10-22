@@ -10,12 +10,12 @@ const bookingSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     suite: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Suite",
-      required: true,
+      required: false,
     },
     // Snapshot of suite details at time of booking (in case suite prices change later)
     suiteSnapshot: {
@@ -79,10 +79,22 @@ const bookingSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["card", "upi", "netbanking", "cash", "bank_transfer", "other"],
+      enum: ["razorpay", "card", "upi", "netbanking", "cash", "bank_transfer", "other"],
+      default: "razorpay",
     },
     paymentReference: {
       type: String, // Razorpay/Stripe payment ID
+    },
+    razorpayOrderId: {
+      type: String,
+      index: true,
+    },
+    razorpayPaymentId: {
+      type: String,
+      index: true,
+    },
+    razorpaySignature: {
+      type: String,
     },
     // Timestamps for status changes
     confirmedAt: Date,

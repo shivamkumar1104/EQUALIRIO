@@ -10,6 +10,10 @@ import suiteRoutes from "./routes/suite.routes.js";
 import bookingRoutes from "./routes/booking.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import diningRoutes from "./routes/dining.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
+import hotelRoutes from "./routes/hotel.routes.js";
+import contentRoutes from "./routes/content.routes.js";
+import membershipRoutes from "./routes/membership.routes.js";
 
 // Middlewares
 import { apiLimiter } from "./middlewares/rateLimit.middleware.js";
@@ -82,6 +86,10 @@ app.use("/api/suites", suiteRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/dining", diningRoutes);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/hotel", hotelRoutes);
+app.use("/api/content", contentRoutes);
+app.use("/api/membership", membershipRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

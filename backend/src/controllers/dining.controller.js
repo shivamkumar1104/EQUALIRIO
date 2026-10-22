@@ -69,7 +69,13 @@ export const createReservation = async (req, res) => {
  */
 export const getMyReservations = async (req, res) => {
   try {
-    const reservations = await DiningReservation.find({ user: req.user._id }).sort({
+    const filter = {
+      $or: [
+        { user: req.user._id },
+        ...(req.user.email ? [{ "guestInfo.email": { $regex: new RegExp(`^${req.user.email}$`, "i") } }] : []),
+      ],
+    };
+    const reservations = await DiningReservation.find(filter).sort({
       date: -1,
     });
     return sendSuccess(res, 200, "Reservations retrieved", { reservations });

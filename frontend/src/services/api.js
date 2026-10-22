@@ -12,7 +12,7 @@ const request = async (method, path, body = null, auth = false) => {
   const headers = { "Content-Type": "application/json" };
 
   if (auth) {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("hotel_token") || localStorage.getItem("token");
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
@@ -107,7 +107,7 @@ export const reviewsAPI = {
 // ─── Dining ───────────────────────────────────────────────────────────────────
 
 export const diningAPI = {
-  createReservation: (data) => request("POST", "/dining", data),
+  createReservation: (data) => request("POST", "/dining", data, true),
   getMyReservations: () => request("GET", "/dining/my", null, true),
   cancel: (id, reason) => request("PATCH", `/dining/${id}/cancel`, { reason }, true),
   // Admin
@@ -119,4 +119,40 @@ export const diningAPI = {
     request("PATCH", `/dining/${id}/status`, { status, tableNumber }, true),
 };
 
-export default { authAPI, suitesAPI, bookingsAPI, reviewsAPI, diningAPI };
+// ─── Hotel Information ────────────────────────────────────────────────────────
+export const hotelAPI = {
+  getInfo: () => request("GET", "/hotel"),
+  updateInfo: (data) => request("PUT", "/hotel", data, true),
+};
+
+// ─── Content (FAQs, Gallery, Amenities) ─────────────────────────────────────────
+export const contentAPI = {
+  getFAQs: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request("GET", `/content/faqs${query ? `?${query}` : ""}`);
+  },
+  getGallery: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request("GET", `/content/gallery${query ? `?${query}` : ""}`);
+  },
+  getAmenities: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request("GET", `/content/amenities${query ? `?${query}` : ""}`);
+  },
+};
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+export const paymentAPI = {
+  getConfig: () => request("GET", "/payment/config"),
+  createRazorpayOrder: (payload) => request("POST", "/payment/razorpay/create-order", payload, true),
+  verifyPayment: (payload) => request("POST", "/payment/razorpay/verify", payload, true),
+};
+
+// ─── Membership / Newsletter ──────────────────────────────────────────────────
+export const membershipAPI = {
+  subscribe: (email) => request("POST", "/membership/subscribe", { email }),
+  checkMembership: (email) => request("GET", `/membership/check/${encodeURIComponent(email)}`),
+};
+
+export default { authAPI, suitesAPI, bookingsAPI, reviewsAPI, diningAPI, paymentAPI, hotelAPI, contentAPI, membershipAPI };
+

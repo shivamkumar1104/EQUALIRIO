@@ -1,11 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FAQS_DATA } from '../data/hotelData';
+import { contentAPI } from '../services/api';
 import { ChevronDown, HelpCircle, Send, CheckCircle2 } from 'lucide-react';
 
 export default function FaqSection({ onToast }) {
+  const [faqsList, setFaqsList] = useState(FAQS_DATA);
   const [openIndex, setOpenIndex] = useState(0);
   const [questionText, setQuestionText] = useState('');
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    contentAPI.getFAQs()
+      .then((res) => {
+        if (!isMounted) return;
+        const fetched = res.data?.faqs;
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          const formatted = fetched.map((f, idx) => ({
+            id: f._id || `faq-${idx}`,
+            q: f.question || f.q,
+            a: f.answer || f.a,
+          }));
+          setFaqsList(formatted);
+        }
+      })
+      .catch((err) => {
+        console.warn('FAQs live fetch fallback to initial data:', err.message);
+      });
+    return () => { isMounted = false; };
+  }, []);
 
   const toggleFaq = (index) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -42,7 +65,7 @@ export default function FaqSection({ onToast }) {
           
           {/* FAQ Accordion List */}
           <div className="lg:col-span-7 space-y-4">
-            {FAQS_DATA.map((faq, idx) => (
+            {faqsList.map((faq, idx) => (
               <div
                 key={idx}
                 className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm transition-all"

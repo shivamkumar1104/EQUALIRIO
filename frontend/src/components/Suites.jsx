@@ -1,11 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SUITES_DATA } from '../data/hotelData';
+import { suitesAPI } from '../services/api';
 import { Users, Maximize2, Eye, Sparkles, Bed, Check, ArrowRight } from 'lucide-react';
+
+const normalizeSuite = (s) => ({
+  id: s._id || s.id,
+  _id: s._id || s.id,
+  name: s.name,
+  category: s.category
+    ? (s.category.toLowerCase() === 'villa' ? 'Villas' :
+       s.category.toLowerCase() === 'penthouse' ? 'Penthouses' :
+       s.category.toLowerCase() === 'suite' ? 'Eco Suites' :
+       s.category.charAt(0).toUpperCase() + s.category.slice(1))
+    : 'Villas',
+  tag: s.tag || (s.isFeatured ? "Most Popular" : "Luxury Haven"),
+  price: s.pricePerNight || s.price || 950,
+  currency: s.currency || "USD",
+  size: s.size ? (typeof s.size === 'object' ? `${s.size.sqm || 185} m² / ${s.size.sqft || 1990} sq ft` : s.size) : '185 m² / 1,990 sq ft',
+  guests: s.guests || `${s.maxGuests || 2} Guests`,
+  beds: s.beds || `${s.bedrooms || 1} King ${s.bedrooms > 1 ? 'Suites' : '+ 1 Daybed'}`,
+  view: s.view ? `${s.view.charAt(0).toUpperCase() + s.view.slice(1)} View` : "Panoramic Ocean View",
+  image: (Array.isArray(s.images) && s.images[0] ? (typeof s.images[0] === 'object' ? s.images[0].url : s.images[0]) : s.image) || "/images/Infinity Pool Ocean Villa exterior.jpg",
+  images: Array.isArray(s.images) && s.images.length > 0 ? s.images.map(img => typeof img === 'object' ? img.url : img) : (s.images || [s.image]),
+  description: s.description || s.shortDescription,
+  amenities: Array.isArray(s.amenities) ? s.amenities : [],
+  addons: s.addons || []
+});
 
 export default function Suites({ onSelectSuite, onBookSuite, currency }) {
   const { t } = useTranslation();
+  const [suitesList, setSuitesList] = useState(SUITES_DATA);
   const [activeCategory, setActiveCategory] = useState('All');
+
+  useEffect(() => {
+    let isMounted = true;
+    suitesAPI.getAll()
+      .then((res) => {
+        if (!isMounted) return;
+        const fetched = res.data?.suites;
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          const normalized = fetched.map(normalizeSuite);
+          setSuitesList(normalized);
+        }
+      })
+      .catch((err) => {
+        console.warn('Suites fetch fallback to hotelData:', err.message);
+      });
+    return () => { isMounted = false; };
+  }, []);
 
   const categories = [
     { key: 'All', label: t('suites.filterAll') },
@@ -26,8 +69,8 @@ export default function Suites({ onSelectSuite, onBookSuite, currency }) {
   const curr = currencyRates[currency] || currencyRates.USD;
 
   const filteredSuites = activeCategory === 'All'
-    ? SUITES_DATA
-    : SUITES_DATA.filter(s => s.category.toLowerCase() === activeCategory.toLowerCase() || (activeCategory === 'Villas' && s.category === 'Villas'));
+    ? suitesList
+    : suitesList.filter(s => s.category.toLowerCase() === activeCategory.toLowerCase() || (activeCategory === 'Villas' && s.category === 'Villas'));
 
   const formatPrice = (priceUSD) => {
     const converted = Math.round(priceUSD * curr.rate);
@@ -73,7 +116,7 @@ export default function Suites({ onSelectSuite, onBookSuite, currency }) {
         </div>
 
         {/* Suites Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {filteredSuites.map((suite) => (
             <div
               key={suite.id}
@@ -103,20 +146,20 @@ export default function Suites({ onSelectSuite, onBookSuite, currency }) {
                 </div>
 
                 {/* Content */}
-                <div className="p-6 sm:p-8">
+                <div className="p-5 sm:p-6">
                   
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-serif text-2xl sm:text-3xl text-white font-normal group-hover:text-hotel-gold-light transition-colors">
+                    <h3 className="font-serif text-xl sm:text-2xl text-white font-normal group-hover:text-hotel-gold-light transition-colors">
                       {suite.name}
                     </h3>
                   </div>
 
-                  <p className="text-gray-300 text-xs sm:text-sm font-light leading-relaxed mb-6 line-clamp-2">
+                  <p className="text-gray-300 text-xs sm:text-sm font-light leading-relaxed mb-4 line-clamp-2">
                     {suite.description}
                   </p>
 
                   {/* Key Details Bar */}
-                  <div className="grid grid-cols-2 gap-3 py-3 border-y border-white/10 text-xs text-gray-300 mb-6 font-light">
+                  <div className="grid grid-cols-2 gap-3 py-3 border-y border-white/10 text-xs text-gray-300 mb-4 font-light">
                     <div className="flex items-center gap-2">
                       <Maximize2 className="w-4 h-4 text-hotel-gold shrink-0" />
                       <span>{suite.size}</span>
@@ -128,11 +171,11 @@ export default function Suites({ onSelectSuite, onBookSuite, currency }) {
                   </div>
 
                   {/* Highlights Bullet Badges */}
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-1.5 mb-4">
                     {suite.amenities.slice(0, 3).map((amenity, idx) => (
                       <span
                         key={idx}
-                        className="text-[11px] bg-white/5 border border-white/10 text-gray-300 px-3 py-1 rounded-md flex items-center gap-1"
+                        className="text-[11px] bg-white/5 border border-white/10 text-gray-300 px-2.5 py-1 rounded-md flex items-center gap-1"
                       >
                         <Check className="w-3 h-3 text-hotel-gold" />
                         {amenity}
@@ -150,7 +193,7 @@ export default function Suites({ onSelectSuite, onBookSuite, currency }) {
               </div>
 
               {/* Price & Card Actions */}
-              <div className="p-6 sm:p-8 pt-0 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5">
+              <div className="px-5 sm:px-6 py-4 pt-0 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/5">
                 <div>
                   <span className="text-[10px] uppercase tracking-widest text-gray-400 block">Starting From</span>
                   <div className="flex items-baseline gap-1">

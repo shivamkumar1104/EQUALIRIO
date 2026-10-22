@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOTEL_INFO } from '../data/hotelData';
-import { Calendar, Globe, Menu, X, Sparkles, ChevronDown, User, LogOut } from 'lucide-react';
+import { Calendar, Globe, Menu, X, Sparkles, ChevronDown, User, LogOut, Receipt, Utensils, LayoutDashboard } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../i18n';
 
-export default function Navbar({ onOpenBooking, currency, setCurrency, user, onOpenAuth, onLogout }) {
+export default function Navbar({
+  onOpenBooking,
+  currency,
+  setCurrency,
+  user,
+  onOpenAuth,
+  onLogout,
+  onOpenMyBookings,
+  onOpenAdmin
+}) {
   const { t, i18n } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState(() => i18n.language || 'en');
 
   useEffect(() => {
@@ -30,13 +40,11 @@ export default function Navbar({ onOpenBooking, currency, setCurrency, user, onO
   }, []);
 
   const navLinks = [
-    { name: t('nav.about'), href: '#about' },
     { name: t('nav.suites'), href: '#suites' },
     { name: t('nav.amenities'), href: '#amenities' },
     { name: t('nav.dining'), href: '#dining' },
     { name: t('nav.gallery'), href: '#gallery' },
     { name: t('nav.reviews'), href: '#reviews' },
-    { name: t('nav.faqs'), href: '#faqs' },
   ];
 
   return (
@@ -47,11 +55,11 @@ export default function Navbar({ onOpenBooking, currency, setCurrency, user, onO
           : 'bg-gradient-to-b from-black/80 via-black/40 to-transparent py-5'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+      <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6">
+        <div className="flex items-center justify-between gap-3">
           
-          {/* Brand Logo */}
-          <a href="#" className="flex items-center gap-3 group">
+          {/* Brand Logo - Left Aligned */}
+          <a href="#" className="flex items-center gap-3 group shrink-0 mr-2">
             <div className="w-10 h-10 rounded-full border border-hotel-gold/60 flex items-center justify-center bg-hotel-emerald/40 group-hover:border-hotel-gold transition-colors">
               <Sparkles className="w-5 h-5 text-hotel-gold group-hover:rotate-45 transition-transform duration-500" />
             </div>
@@ -65,13 +73,13 @@ export default function Navbar({ onOpenBooking, currency, setCurrency, user, onO
             </div>
           </a>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8">
+          {/* Desktop Navigation Links - Centered */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 flex-1 justify-center">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                className="text-xs uppercase tracking-[0.2em] text-gray-200 hover:text-hotel-gold transition-colors relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-hotel-gold hover:after:w-full after:transition-all after:duration-300"
+                className="text-xs uppercase tracking-[0.2em] text-gray-200 hover:text-hotel-gold transition-colors relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-hotel-gold hover:after:w-full after:transition-all after:duration-300"
               >
                 {link.name}
               </a>
@@ -79,7 +87,7 @@ export default function Navbar({ onOpenBooking, currency, setCurrency, user, onO
           </nav>
 
           {/* Right Actions: Currency Selector, Contact & CTA */}
-          <div className="hidden sm:flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3 xl:gap-4 shrink-0 ml-2 pr-1">
             
             {/* Currency & Language Selector */}
             {/* Currency & Language Selector */}
@@ -141,34 +149,113 @@ export default function Navbar({ onOpenBooking, currency, setCurrency, user, onO
 
             {/* Auth Profile / Sign In */}
             {user ? (
-              <div className="flex items-center gap-2 pl-2 border-l border-white/15">
-                <div className="flex items-center gap-2 text-xs text-hotel-gold bg-white/10 px-3 py-1.5 rounded-full border border-hotel-gold/30">
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.name || 'User'}
-                      className="w-5 h-5 rounded-full object-cover border border-hotel-gold/50"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full bg-hotel-gold text-hotel-emerald-dark font-bold text-[10px] flex items-center justify-center">
-                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              <div className="relative flex items-center gap-2 pl-2 border-l border-white/15">
+                {/* My Stays Direct CTA Button */}
+                <button
+                  onClick={onOpenMyBookings}
+                  className="flex items-center gap-1.5 text-xs text-hotel-gold bg-hotel-gold/10 hover:bg-hotel-gold/20 px-3 py-1.5 rounded-full border border-hotel-gold/30 transition-all shadow-sm"
+                  title="View My Bookings & Reservations"
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span className="font-serif tracking-wider uppercase text-[11px] font-semibold">My Stays</span>
+                </button>
+
+                {/* Admin Operations Button (if admin) */}
+                {user.role === 'admin' && (
+                  <button
+                    onClick={onOpenAdmin}
+                    className="flex items-center gap-1.5 text-xs text-amber-300 bg-amber-400/15 hover:bg-amber-400/25 px-3 py-1.5 rounded-full border border-amber-400/40 transition-all shadow-sm"
+                    title="Open Admin Operations Console"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <span className="font-serif tracking-wider uppercase text-[11px] font-semibold">Admin</span>
+                  </button>
+                )}
+
+                {/* User Dropdown Pill */}
+                <div className="relative">
+                  <button
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="flex items-center gap-2 text-xs text-hotel-gold bg-white/10 hover:bg-white/15 px-2.5 py-1.5 rounded-full border border-hotel-gold/30 transition-colors"
+                  >
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name || 'User'}
+                        className="w-5 h-5 rounded-full object-cover border border-hotel-gold/50"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-hotel-gold text-hotel-emerald-dark font-bold text-[10px] flex items-center justify-center">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                    )}
+                    <span className="font-serif tracking-wider max-w-[80px] truncate">{user.name ? user.name.split(' ')[0] : 'Guest'}</span>
+                    {user.role === 'admin' && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 rounded uppercase tracking-wider">
+                        Admin
+                      </span>
+                    )}
+                    <ChevronDown className="w-3 h-3 text-hotel-gold/70" />
+                  </button>
+
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-52 bg-hotel-emerald-dark border border-hotel-gold/30 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in text-white p-1.5">
+                      <div className="px-3 py-2 border-b border-white/10">
+                        <p className="text-xs font-semibold text-white truncate">{user.name}</p>
+                        <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
+                      </div>
+
+                      {user.role === 'admin' && (
+                        <button
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            if (onOpenAdmin) onOpenAdmin();
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2.5 text-amber-300 hover:bg-amber-400/15 transition-colors font-semibold border-b border-white/10 mb-1"
+                        >
+                          <LayoutDashboard className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Admin Console</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          if (onOpenMyBookings) onOpenMyBookings();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2.5 text-gray-200 hover:bg-white/10 hover:text-hotel-gold transition-colors"
+                      >
+                        <Receipt className="w-3.5 h-3.5 text-hotel-gold" />
+                        <span>My Stays & Bookings</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          if (onOpenMyBookings) onOpenMyBookings();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2.5 text-gray-200 hover:bg-white/10 hover:text-hotel-gold transition-colors"
+                      >
+                        <Utensils className="w-3.5 h-3.5 text-hotel-gold" />
+                        <span>Dining Reservations</span>
+                      </button>
+
+                      <div className="my-1 border-t border-white/10"></div>
+
+                      <button
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          onLogout();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2.5 text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign Out</span>
+                      </button>
                     </div>
                   )}
-                  <span className="font-serif tracking-wider max-w-[80px] truncate">{user.name ? user.name.split(' ')[0] : 'Guest'}</span>
-                  {user.role === 'admin' && (
-                    <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 rounded uppercase tracking-wider">
-                      Admin
-                    </span>
-                  )}
                 </div>
-                <button
-                  onClick={onLogout}
-                  className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </button>
               </div>
             ) : (
               <button
@@ -249,24 +336,50 @@ export default function Navbar({ onOpenBooking, currency, setCurrency, user, onO
 
               {/* Mobile Auth Button */}
               {user ? (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-hotel-gold/30">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-hotel-gold text-hotel-emerald-dark font-bold text-xs flex items-center justify-center">
-                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                <div className="p-3 rounded-xl bg-white/5 border border-hotel-gold/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-hotel-gold text-hotel-emerald-dark font-bold text-xs flex items-center justify-center">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-white truncate max-w-[150px]">{user.name}</p>
+                        <p className="text-[10px] text-gray-400 truncate max-w-[150px]">{user.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-white truncate max-w-[150px]">{user.name}</p>
-                      <p className="text-[10px] text-gray-400 truncate max-w-[150px]">{user.email}</p>
-                    </div>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        onLogout();
+                      }}
+                      className="text-xs text-red-400 hover:text-red-300 font-medium px-2 py-1 bg-red-950/40 rounded-lg border border-red-800/40"
+                    >
+                      {t('nav.signOut')}
+                    </button>
                   </div>
+
+                  {user.role === 'admin' && (
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        if (onOpenAdmin) onOpenAdmin();
+                      }}
+                      className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/40 text-xs font-semibold uppercase tracking-wider"
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5" />
+                      <span>Admin Operations Console</span>
+                    </button>
+                  )}
+
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      onLogout();
+                      if (onOpenMyBookings) onOpenMyBookings();
                     }}
-                    className="text-xs text-red-400 hover:text-red-300 font-medium px-2 py-1 bg-red-950/40 rounded-lg border border-red-800/40"
+                    className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-hotel-gold/15 text-hotel-gold border border-hotel-gold/30 text-xs font-semibold uppercase tracking-wider"
                   >
-                    {t('nav.signOut')}
+                    <Receipt className="w-3.5 h-3.5" />
+                    <span>My Stays & Dining Bookings</span>
                   </button>
                 </div>
               ) : (

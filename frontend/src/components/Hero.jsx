@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { HOTEL_INFO } from '../data/hotelData';
 import { Calendar, Users, Sparkles, Star, MapPin, ArrowRight, ShieldCheck } from 'lucide-react';
 
-export default function Hero({ onSearchBooking }) {
+export default function Hero({ onSearchBooking, hotelInfo }) {
   const { t } = useTranslation();
+  const info = hotelInfo || HOTEL_INFO;
   const [checkIn, setCheckIn] = useState('2026-09-10');
   const [checkOut, setCheckOut] = useState('2026-09-15');
   const [guests, setGuests] = useState('2 Guests');
@@ -27,7 +28,7 @@ export default function Hero({ onSearchBooking }) {
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2000&q=90"
-          alt="Equalirio Luxury Resort & Bay"
+          alt={`${info.name} Luxury Resort & Bay`}
           className="w-full h-full object-cover object-center scale-105 filter brightness-75 transition-transform duration-10000 animate-pulse"
           style={{ animationDuration: '20s' }}
         />
@@ -48,12 +49,12 @@ export default function Hero({ onSearchBooking }) {
             {t('hero.badge')}
           </span>
           <span className="w-1 h-1 rounded-full bg-hotel-gold"></span>
-          <span className="text-xs text-white/90 font-mono">{HOTEL_INFO.rating} ⭐ ({HOTEL_INFO.reviewCount} Reviews)</span>
+          <span className="text-xs text-white/90 font-mono">{info.rating} ⭐ ({info.reviewCount} Reviews)</span>
         </div>
 
         {/* Main Heading */}
         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif text-white font-normal tracking-wide leading-[1.1] mb-6 drop-shadow-2xl">
-          EQUALIRIO
+          {info.name}
         </h1>
 
         <p className="text-lg sm:text-2xl font-serif italic text-hotel-gold-light max-w-2xl mb-4 font-light tracking-wide">
@@ -127,16 +128,16 @@ export default function Hero({ onSearchBooking }) {
 
         {/* Feature Badges under search */}
         <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10 text-xs text-gray-300 font-light">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-hotel-gold" />
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <ShieldCheck className="w-4 h-4 text-hotel-gold shrink-0" />
             <span>Best Rate Guarantee</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-hotel-gold" />
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <Sparkles className="w-4 h-4 text-hotel-gold shrink-0" />
             <span>Complimentary Helipad Transfer</span>
           </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-hotel-gold" />
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <MapPin className="w-4 h-4 text-hotel-gold shrink-0" />
             <span>Private Coastal Sanctuary</span>
           </div>
         </div>

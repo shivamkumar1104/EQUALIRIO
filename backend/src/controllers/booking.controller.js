@@ -133,7 +133,12 @@ export const createBooking = async (req, res) => {
 export const getMyBookings = async (req, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
-    const filter = { user: req.user._id };
+    const filter = {
+      $or: [
+        { user: req.user._id },
+        ...(req.user.email ? [{ "guestInfo.email": { $regex: new RegExp(`^${req.user.email}$`, "i") } }] : []),
+      ],
+    };
     if (status) filter.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -194,7 +199,9 @@ export const getBookingById = async (req, res) => {
  */
 export const cancelBooking = async (req, res) => {
   try {
-    const booking = await Booking.findOne({ bookingId: req.params.id }).populate("user");
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(req.params.id);
+    const query = isObjectId ? { _id: req.params.id } : { bookingId: req.params.id };
+    const booking = await Booking.findOne(query).populate("user");
 
     if (!booking) return sendError(res, 404, "Booking not found");
 
@@ -287,8 +294,11 @@ export const updateBookingStatus = async (req, res) => {
       return sendError(res, 400, `Invalid status. Must be one of: ${validStatuses.join(", ")}`);
     }
 
-    const booking = await Booking.findByIdAndUpdate(
-      req.params.id,
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(req.params.id);
+    const query = isObjectId ? { _id: req.params.id } : { bookingId: req.params.id };
+
+    const booking = await Booking.findOneAndUpdate(
+      query,
       {
         status,
         ...(status === "confirmed" ? { confirmedAt: new Date() } : {}),

@@ -1,12 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GALLERY_DATA } from '../data/hotelData';
+import { contentAPI } from '../services/api';
 import { Camera, Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Gallery() {
   const { t } = useTranslation();
+  const [galleryList, setGalleryList] = useState(GALLERY_DATA);
   const [activeCategory, setActiveCategory] = useState('All');
   const [lightboxIndex, setLightboxIndex] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    contentAPI.getGallery({ limit: 30 })
+      .then((res) => {
+        if (!isMounted) return;
+        const fetched = res.data?.items;
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          const formatted = fetched.map((item, idx) => ({
+            id: item._id || item.id || `g-${idx}`,
+            title: item.title,
+            category: item.category,
+            image: typeof item.image === 'object' ? item.image.url : item.image,
+          }));
+          setGalleryList(formatted);
+        }
+      })
+      .catch((err) => {
+        console.warn('Gallery live fetch fallback to initial data:', err.message);
+      });
+    return () => { isMounted = false; };
+  }, []);
 
   const categories = [
     { key: 'All', label: t('gallery.all') },
@@ -17,8 +41,8 @@ export default function Gallery() {
   ];
 
   const filteredGallery = activeCategory === 'All'
-    ? GALLERY_DATA
-    : GALLERY_DATA.filter(item => item.category.toLowerCase() === activeCategory.toLowerCase());
+    ? galleryList
+    : galleryList.filter(item => item.category.toLowerCase() === activeCategory.toLowerCase());
 
   const handleOpenLightbox = (index) => {
     setLightboxIndex(index);

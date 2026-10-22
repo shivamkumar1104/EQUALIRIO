@@ -14,7 +14,7 @@ const diningReservationSchema = new mongoose.Schema(
     restaurant: {
       type: String,
       required: [true, "Restaurant name is required"],
-      enum: ["Ocean Terrace", "The Forest Table", "Sakura Lounge", "Private Dining"],
+      trim: true,
     },
     guestInfo: {
       firstName: { type: String, required: true, trim: true },

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Review from "../models/Review.js";
 import Booking from "../models/Booking.js";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
@@ -16,7 +17,7 @@ export const getSuiteReviews = async (req, res) => {
     const total = await Review.countDocuments(filter);
 
     const reviews = await Review.find(filter)
-      .populate("user", "firstName lastName avatar")
+      .populate("user", "name avatar")
       .sort(sort)
       .skip(skip)
       .limit(Number(limit))
@@ -24,7 +25,7 @@ export const getSuiteReviews = async (req, res) => {
 
     // Aggregate rating breakdown
     const ratingStats = await Review.aggregate([
-      { $match: { suite: require("mongoose").Types.ObjectId(req.params.suiteId), status: "approved" } },
+      { $match: { suite: new mongoose.Types.ObjectId(req.params.suiteId), status: "approved" } },
       {
         $group: {
           _id: null,
@@ -63,7 +64,7 @@ export const getAllReviews = async (req, res) => {
     const total = await Review.countDocuments(filter);
 
     const reviews = await Review.find(filter)
-      .populate("user", "firstName lastName avatar")
+      .populate("user", "name avatar")
       .populate("suite", "name category")
       .sort(sort)
       .skip(skip)
@@ -119,7 +120,7 @@ export const createReview = async (req, res) => {
       status: "approved",
     });
 
-    const populated = await Review.findById(review._id).populate("user", "firstName lastName avatar");
+    const populated = await Review.findById(review._id).populate("user", "name avatar");
 
     return sendSuccess(res, 201, "Review submitted successfully", { review: populated });
   } catch (error) {
@@ -202,7 +203,7 @@ export const respondToReview = async (req, res) => {
         "hotelResponse.respondedBy": req.user._id,
       },
       { new: true }
-    ).populate("user", "firstName lastName");
+    ).populate("user", "name");
 
     if (!review) return sendError(res, 404, "Review not found");
     return sendSuccess(res, 200, "Response added successfully", { review });
