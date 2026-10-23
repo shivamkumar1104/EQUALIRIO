@@ -1,5 +1,6 @@
 import express from 'express';
 import { subscribe, checkMembership, getAllMembers } from '../controllers/membership.controller.js';
+import { protect, authorize } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -7,9 +8,9 @@ const router = express.Router();
 router.post('/subscribe', subscribe);
 
 // GET /api/membership/check/:email — Check membership status
-router.get('/check/:email', checkMembership);
+router.get('/check/:email', protect, checkMembership);
 
 // GET /api/membership/all — List all members (admin)
-router.get('/all', getAllMembers);
+router.get('/all', protect, authorize('admin'), getAllMembers);
 
 export default router;

@@ -31,7 +31,7 @@ export default function Footer({ onToast, hotelInfo, onOpenAuth }) {
       }
     } catch (err) {
       console.error('Newsletter subscribe error:', err);
-      onToast('Something went wrong. Please try again.');
+      onToast(err.message || 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

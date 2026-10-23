@@ -498,7 +498,7 @@ export default function BookingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-hotel-emerald-dark border border-hotel-gold/40 rounded-3xl overflow-hidden shadow-2xl my-6 text-white">
+      <div className="relative flex w-full max-w-3xl max-h-[calc(100dvh-2rem)] flex-col bg-hotel-emerald-dark border border-hotel-gold/40 rounded-3xl overflow-hidden shadow-2xl text-white">
         
         {/* Close Button */}
         <button
@@ -509,7 +509,7 @@ export default function BookingModal({
         </button>
 
         {/* Modal Header */}
-        <div className="p-6 sm:p-8 bg-gradient-to-r from-hotel-emerald to-hotel-emerald-dark border-b border-hotel-gold/20 flex flex-col gap-2">
+        <div className="shrink-0 p-6 pr-16 sm:p-8 sm:pr-20 bg-gradient-to-r from-hotel-emerald to-hotel-emerald-dark border-b border-hotel-gold/20 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-hotel-gold text-xs uppercase tracking-widest font-semibold">
             <Sparkles className="w-4 h-4" /> Equalirio Reservation & Payment Gateway
           </div>
@@ -542,7 +542,7 @@ export default function BookingModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 sm:p-8 max-h-[70vh] overflow-y-auto">
+        <div className="flex-1 min-h-0 p-6 sm:p-8 overflow-y-auto">
           {paymentError && (
             <div className="mb-6 p-4 rounded-xl bg-red-900/40 border border-red-500/50 flex items-center gap-3 text-red-200 text-xs">
               <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-400" />
@@ -1178,7 +1178,7 @@ export default function BookingModal({
                   ) : paymentMethod === 'razorpay' ? (
                     <>
                       <Lock className="w-4 h-4" />
-                      <span>Pay ₹{grandTotalINR.toLocaleString()} with Razorpay</span>
+                      <span>Pay ₹{grandTotalINR.toLocaleString()}</span>
                     </>
                   ) : (
                     <>

@@ -23,10 +23,9 @@ import {
 } from 'lucide-react';
 import { bookingsAPI, diningAPI, suitesAPI } from '../services/api';
 import { SUITES_DATA } from '../data/hotelData';
+import AdminCustomersPanel from './AdminCustomersPanel';
 
 export default function AdminDashboardModal({ isOpen, onClose, user, currency = 'IND' }) {
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'bookings' | 'dining' | 'suites'
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState([]);
@@ -103,6 +102,8 @@ export default function AdminDashboardModal({ isOpen, onClose, user, currency = 
       fetchAdminData();
     }
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   // Update Booking Status
   const handleUpdateBookingStatus = async (bookingId, newStatus) => {
@@ -273,7 +274,7 @@ export default function AdminDashboardModal({ isOpen, onClose, user, currency = 
         </div>
 
         {/* Tab Switcher */}
-        <div className="px-6 sm:px-8 pt-3 border-b border-white/10 flex gap-4 text-xs font-semibold uppercase tracking-wider">
+        <div className="px-6 sm:px-8 pt-3 border-b border-white/10 flex gap-4 overflow-x-auto text-xs font-semibold uppercase tracking-wider">
           <button
             onClick={() => setActiveTab('overview')}
             className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
@@ -306,6 +307,17 @@ export default function AdminDashboardModal({ isOpen, onClose, user, currency = 
           >
             <Utensils className="w-4 h-4" />
             <span>Dining Table Reservations ({diningList.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('customers')}
+            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
+              activeTab === 'customers'
+                ? 'border-hotel-gold text-hotel-gold'
+                : 'border-transparent text-gray-400 hover:text-white'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Customers & CRM</span>
           </button>
         </div>
 
@@ -505,6 +517,8 @@ export default function AdminDashboardModal({ isOpen, onClose, user, currency = 
               )}
 
             </div>
+          ) : activeTab === 'customers' ? (
+            <AdminCustomersPanel />
           ) : (
             /* DINING RESERVATIONS TAB */
             <div className="space-y-4">

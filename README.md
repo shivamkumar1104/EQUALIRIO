@@ -17,6 +17,8 @@
 - 🌍 **Multi-language** support (Google Translate integration)
 - 💱 **Multi-currency** display
 - 📱 **Fully Responsive** — mobile-first design
+- 🧾 **Admin CRM** — searchable, paginated guest records with booking and membership context
+- 🔎 **SEO Basics** — search/social metadata and crawler access rules
 
 ---
 
@@ -216,6 +218,11 @@ hotel/
 - Request body size limit (10kb)
 - bcrypt password hashing (rounds: 12)
 - Role-based access control
+- Admin-only customer and membership records; membership lookups are limited to the signed-in user or an admin
+
+## Search Engine & Social Preview Setup
+
+The frontend includes page metadata, Open Graph/Twitter preview tags, and a public `robots.txt`. Add a canonical URL and a `sitemap.xml` after choosing the permanent production domain; do not publish local URLs or placeholder resort contact/location details as structured business data.
 
 ---
 

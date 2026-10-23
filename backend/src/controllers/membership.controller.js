@@ -4,7 +4,7 @@
  */
 import Membership from '../models/Membership.js';
 import User from '../models/User.js';
-import { sendWelcomeEmail, sendNewsletterEmail } from '../services/email.service.js';
+import { sendWelcomeEmail } from '../services/email.service.js';
 
 /**
  * POST /api/membership/subscribe
@@ -30,29 +30,10 @@ export const subscribe = async (req, res) => {
     const existingMember = await Membership.findOne({ email: normalizedEmail });
 
     if (existingMember) {
-      // Already subscribed — send info email
-      const emailResult = await sendNewsletterEmail(
-        normalizedEmail,
-        existingMember.name || 'Valued Guest',
-        {
-          subject: '🏨 Your Exclusive Equalirio Resort Updates',
-          title: 'Latest from Equalirio Resort & Spa',
-          body: `Thank you for being a valued member of our Privé Privilege Club! 
-                 We have curated the latest villa releases, seasonal dining experiences, 
-                 and exclusive spa wellness retreats just for you. Stay tuned for personalized 
-                 offers arriving soon.`,
-        }
-      );
-
-      // Update last email sent
-      existingMember.lastEmailSentAt = new Date();
-      await existingMember.save();
-
       return res.status(200).json({
         success: true,
         status: 'already_member',
-        message: 'Exclusive offers have been sent to your email!',
-        emailSent: emailResult.success,
+        message: 'You are already subscribed to the Privé Privilege Club.',
       });
     }
 
@@ -60,6 +41,13 @@ export const subscribe = async (req, res) => {
     const registeredUser = await User.findOne({ email: normalizedEmail });
 
     if (registeredUser) {
+      if (!registeredUser.emailVerified) {
+        return res.status(403).json({
+          success: false,
+          message: 'Please verify your email before joining the Privé Privilege Club.',
+        });
+      }
+
       // Registered user but not yet a member — auto-subscribe
       const newMember = await Membership.create({
         email: normalizedEmail,
@@ -78,7 +66,9 @@ export const subscribe = async (req, res) => {
       return res.status(201).json({
         success: true,
         status: 'subscribed',
-        message: `Welcome to Privé Privilege Club, ${registeredUser.name}! A welcome email has been sent.`,
+        message: emailResult.success
+          ? `Welcome to Privé Privilege Club, ${registeredUser.name}! A welcome email has been sent.`
+          : `You joined the Privé Privilege Club, ${registeredUser.name}, but the welcome email could not be sent.`,
         emailSent: emailResult.success,
         membership: {
           id: newMember._id,
@@ -121,6 +111,13 @@ export const checkMembership = async (req, res) => {
   try {
     const { email } = req.params;
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (req.user.role !== 'admin' && req.user.email !== normalizedEmail) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only check your own membership status.',
+      });
+    }
 
     const member = await Membership.findOne({ email: normalizedEmail });
 

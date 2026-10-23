@@ -49,6 +49,10 @@ export const authAPI = {
     request("POST", "/auth/resend-verification", { email }),
   getMe: () => request("GET", "/auth/me", null, true),
   updateProfile: (data) => request("PUT", "/auth/profile", data, true),
+  getAdminCustomers: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request("GET", `/auth/admin/customers${query ? `?${query}` : ""}`, null, true);
+  },
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

@@ -1,4 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
+import Booking from "../models/Booking.js";
+import Membership from "../models/Membership.js";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 import { sendVerificationEmail } from "../services/email.service.js";
@@ -362,6 +364,87 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Failed to retrieve users",
+    });
+  }
+};
+
+export const getAdminCustomers = async (req, res) => {
+  try {
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit, 10) || 25));
+    const search = typeof req.query.search === "string"
+      ? req.query.search.trim().slice(0, 100)
+      : "";
+    const filter = { role: "user" };
+
+    if (search) {
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const expression = new RegExp(escapedSearch, "i");
+      filter.$or = [
+        { name: expression },
+        { email: expression },
+        { phone: expression },
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select("name email phone avatar authProvider emailVerified isActive createdAt")
+        .sort({ createdAt: -1, _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(filter),
+    ]);
+
+    const emails = users.map((user) => user.email);
+    const userIds = users.map((user) => user._id);
+    const [memberships, accountBookings, guestBookings] = await Promise.all([
+      Membership.find({ email: { $in: emails } })
+        .select("email tier isActive subscribedAt")
+        .lean(),
+      Booking.aggregate([
+        { $match: { user: { $in: userIds } } },
+        { $group: { _id: "$user", bookingCount: { $sum: 1 } } },
+      ]),
+      Booking.aggregate([
+        { $match: { user: null, "guestInfo.email": { $in: emails } } },
+        { $group: { _id: { $toLower: "$guestInfo.email" }, bookingCount: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const membershipsByEmail = new Map(memberships.map((member) => [member.email, member]));
+    const bookingCountByUserId = new Map(accountBookings.map((item) => [String(item._id), item.bookingCount]));
+    const bookingCountByEmail = new Map(guestBookings.map((item) => [item._id, item.bookingCount]));
+
+    const customers = users.map((user) => {
+      const membership = membershipsByEmail.get(user.email);
+      return {
+        ...user,
+        bookingCount:
+          (bookingCountByUserId.get(String(user._id)) || 0) +
+          (bookingCountByEmail.get(user.email) || 0),
+        membership: membership
+          ? { tier: membership.tier, isActive: membership.isActive, subscribedAt: membership.subscribedAt }
+          : null,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      customers,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Get admin customers error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve customer records.",
     });
   }
 };

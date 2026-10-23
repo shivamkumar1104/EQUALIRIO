@@ -8,6 +8,7 @@ import {
   getMe,
   updateProfile,
   getAllUsers,
+  getAdminCustomers,
   getAdminDashboard,
 } from "../controllers/auth.controller.js";
 import { protect, authorize } from "../middlewares/auth.middleware.js";
@@ -28,6 +29,7 @@ router.put("/profile", protect, updateProfile);
 
 // Role-Based Authorized Routes (Requires role: "admin")
 router.get("/admin/users", protect, authorize("admin"), getAllUsers);
+router.get("/admin/customers", protect, authorize("admin"), getAdminCustomers);
 router.get("/admin/dashboard", protect, authorize("admin"), getAdminDashboard);
 
 export default router;
