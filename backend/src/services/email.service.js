@@ -1,17 +1,70 @@
 /**
- * Resend Email Service for Equalirio Hotel
- * Sends beautiful hotel-branded emails to subscribers via Resend API.
+ * Email services for Equalirio Hotel account verification and newsletters.
  */
 import { Resend } from 'resend';
 import config from '../config/env.js';
 
 let resend = null;
 
+const escapeHTML = (value) =>
+  String(value).replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character]);
+
 const getResendClient = () => {
   if (!resend && config.email.resendApiKey) {
     resend = new Resend(config.email.resendApiKey);
   }
   return resend;
+};
+
+export const sendVerificationEmail = async (email, name, token) => {
+  if (!config.email.brevoApiKey) {
+    throw new Error('BREVO_API_KEY is not configured.');
+  }
+  if (!config.email.brevoSenderEmail) {
+    throw new Error('BREVO_SENDER_EMAIL is not configured with a verified Brevo sender.');
+  }
+
+  const verificationUrl = new URL('/', config.frontendUrl);
+  verificationUrl.hash = new URLSearchParams({ verifyEmail: token }).toString();
+  const safeName = escapeHTML(name);
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': config.email.brevoApiKey,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: {
+        name: config.email.brevoSenderName,
+        email: config.email.brevoSenderEmail,
+      },
+      to: [{ email, name }],
+      subject: 'Verify your EQUALIRIO account',
+      htmlContent: `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#17352c">
+          <h1 style="color:#b4975a">Welcome to EQUALIRIO</h1>
+          <p>Hello ${safeName},</p>
+          <p>Please verify your email address to finish creating your account.</p>
+          <p><a href="${verificationUrl.toString()}" style="display:inline-block;padding:12px 20px;background:#b4975a;color:#102820;text-decoration:none;border-radius:6px">Verify email</a></p>
+          <p>This link expires in 24 hours. If you did not create an account, you can ignore this email.</p>
+        </div>
+      `,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    console.error('Brevo verification email failed:', response.status, errorBody.message || response.statusText);
+    throw new Error(`Brevo could not send the verification email (HTTP ${response.status}).`);
+  }
 };
 
 /**

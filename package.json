@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@getbrevo/brevo": "^6.2.0",
     "mongodb": "^7.6.0"
   },
   "devDependencies": {

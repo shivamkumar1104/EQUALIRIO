@@ -12,13 +12,14 @@ const optional = {
   PORT: "5000",
   NODE_ENV: "development",
   JWT_EXPIRES_IN: "30d",
-  FRONTEND_URL: "http://localhost:5173",
   GOOGLE_CLIENT_ID: "",
   CLOUDINARY_CLOUD_NAME: "",
   CLOUDINARY_API_KEY: "",
   CLOUDINARY_API_SECRET: "",
   RESEND_API_KEY: "",
   EMAIL_FROM: "Equalirio Resort <onboarding@resend.dev>",
+  BREVO_SENDER_NAME: "Equalirio Resort",
+  FRONTEND_URL: "http://localhost:3000",
 };
 
 export const validateEnv = () => {
@@ -62,8 +63,11 @@ export const config = {
   email: {
     resendApiKey: process.env.RESEND_API_KEY || "",
     from: process.env.EMAIL_FROM || "Equalirio Resort <onboarding@resend.dev>",
+    brevoApiKey: process.env.BREVO_API_KEY || "",
+    brevoSenderEmail: process.env.BREVO_SENDER_EMAIL || "",
+    brevoSenderName: process.env.BREVO_SENDER_NAME || "Equalirio Resort",
   },
-  frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+  frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
 };
 
 export default config;

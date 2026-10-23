@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Mail, Lock, User, LogIn, UserPlus, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const GOOGLE_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  '11737737742-dqmb8bm0jn313cqiqp1lidjlha1vdi00.apps.googleusercontent.com';
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '');
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
 
 export default function AuthModal({ isOpen, onClose, onSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,6 +11,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState('');
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const googleBtnRef = useRef(null);
@@ -22,46 +23,59 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
     if (!isOpen) return;
 
     let checkInterval = null;
+    let loadTimeout = null;
+
+    if (!GOOGLE_CLIENT_ID) {
+      setGoogleError('Google sign-in is not configured. Add VITE_GOOGLE_CLIENT_ID to frontend/.env.');
+      return;
+    }
 
     const initGoogle = () => {
-      if (window.google?.accounts?.id && googleBtnRef.current) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleGoogleResponse,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-          });
+      if (!window.google?.accounts?.id || !googleBtnRef.current) return false;
 
-          googleBtnRef.current.innerHTML = '';
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            type: 'standard',
-            theme: 'filled_black',
-            size: 'large',
-            text: isLogin ? 'signin_with' : 'signup_with',
-            shape: 'pill',
-            logo_alignment: 'left',
-            width: 320,
-          });
-        } catch (err) {
-          console.warn('Google Sign-In initialization note:', err);
-        }
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        googleBtnRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          type: 'standard',
+          theme: 'filled_black',
+          size: 'large',
+          text: isLogin ? 'signin_with' : 'signup_with',
+          shape: 'pill',
+          logo_alignment: 'left',
+          width: 320,
+        });
+        setGoogleError('');
+      } catch (err) {
+        console.error('Google Sign-In initialization failed:', err);
+        setGoogleError('Google sign-in could not initialize. Check the Google Client ID and authorized origin.');
       }
+
+      return true;
     };
 
-    if (window.google?.accounts?.id) {
-      initGoogle();
-    } else {
+    if (!initGoogle()) {
       checkInterval = setInterval(() => {
-        if (window.google?.accounts?.id) {
+        if (initGoogle()) {
           clearInterval(checkInterval);
-          initGoogle();
+          clearTimeout(loadTimeout);
         }
       }, 300);
+      loadTimeout = setTimeout(() => {
+        clearInterval(checkInterval);
+        setGoogleError('Google sign-in could not load. Check your internet connection and Google Identity Services access.');
+      }, 10000);
     }
 
     return () => {
       if (checkInterval) clearInterval(checkInterval);
+      if (loadTimeout) clearTimeout(loadTimeout);
     };
   }, [isOpen, isLogin]);
 
@@ -74,7 +88,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
     setGoogleLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/google`, {
+      const response = await fetch(`${API_BASE}/auth/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,8 +128,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
 
     const endpoint = isLogin
-      ? `${API_BASE}/api/auth/login`
-      : `${API_BASE}/api/auth/register`;
+      ? `${API_BASE}/auth/login`
+      : `${API_BASE}/auth/register`;
 
     const payload = isLogin
       ? { email: email.trim(), password }
@@ -131,6 +145,17 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
       });
 
       const data = await response.json();
+
+      if (data.verificationRequired) {
+        setVerificationPending(true);
+        if (response.ok) {
+          setSuccessMsg(data.message);
+          setPassword('');
+        } else {
+          setErrorMsg(data.message);
+        }
+        return;
+      }
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Authentication failed');
@@ -154,12 +179,35 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
+  const handleResendVerification = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    setResendingVerification(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Could not resend verification email');
+      }
+      setSuccessMsg(data.message);
+    } catch (err) {
+      setErrorMsg(err.message || 'Could not resend verification email');
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
       <div className="relative w-full max-w-md bg-hotel-emerald-dark border border-hotel-gold/40 rounded-2xl shadow-2xl overflow-hidden text-white font-sans max-h-[95vh] overflow-y-auto">
         
         {/* Top Decorative Header */}
-        <div className="relative bg-gradient-to-r from-hotel-emerald-dark via-hotel-emerald to-hotel-emerald-dark p-6 text-center border-b border-hotel-gold/20">
+        <div className="relative p-6 text-center border-b bg-gradient-to-r from-hotel-emerald-dark via-hotel-emerald to-hotel-emerald-dark border-hotel-gold/20">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -167,7 +215,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
             <X className="w-5 h-5" />
           </button>
 
-          <div className="w-10 h-10 mx-auto mb-2 rounded-full border border-hotel-gold/50 flex items-center justify-center bg-hotel-gold/10">
+          <div className="flex items-center justify-center w-10 h-10 mx-auto mb-2 border rounded-full border-hotel-gold/50 bg-hotel-gold/10">
             <Sparkles className="w-5 h-5 text-hotel-gold" />
           </div>
 
@@ -179,13 +227,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
           </p>
 
           {/* Toggle Tabs */}
-          <div className="mt-5 grid grid-cols-2 p-1 bg-black/30 rounded-xl border border-white/10">
+          <div className="grid grid-cols-2 p-1 mt-5 border bg-black/30 rounded-xl border-white/10">
             <button
               type="button"
               onClick={() => {
                 setIsLogin(true);
                 setErrorMsg('');
                 setSuccessMsg('');
+                setVerificationPending(false);
               }}
               className={`py-2 text-xs font-semibold tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                 isLogin
@@ -203,6 +252,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
                 setIsLogin(false);
                 setErrorMsg('');
                 setSuccessMsg('');
+                setVerificationPending(false);
               }}
               className={`py-2 text-xs font-semibold tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                 !isLogin
@@ -221,22 +271,29 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
           
           {/* Official Google Sign-In Button */}
           <div className="flex flex-col items-center justify-center gap-2 pt-1">
-            <div
-              ref={googleBtnRef}
-              className="w-full flex justify-center min-h-[44px]"
-            ></div>
+            {GOOGLE_CLIENT_ID && (
+              <div
+                ref={googleBtnRef}
+                className="w-full flex justify-center min-h-[44px]"
+              ></div>
+            )}
             {googleLoading && (
               <span className="text-xs text-hotel-gold animate-pulse">Connecting with Google...</span>
+            )}
+            {googleError && (
+              <p role="status" className="text-xs text-center text-amber-200">
+                {googleError}
+              </p>
             )}
           </div>
 
           {/* Divider */}
           <div className="relative flex items-center justify-center my-2">
-            <div className="border-t border-white/15 w-full"></div>
+            <div className="w-full border-t border-white/15"></div>
             <span className="bg-hotel-emerald-dark px-3 text-[10px] tracking-widest uppercase text-gray-400 shrink-0">
               or use email
             </span>
-            <div className="border-t border-white/15 w-full"></div>
+            <div className="w-full border-t border-white/15"></div>
           </div>
 
           {/* Form */}
@@ -249,7 +306,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-hotel-gold/60 absolute left-3 top-3" />
+                  <User className="absolute w-4 h-4 text-hotel-gold/60 left-3 top-3" />
                   <input
                     type="text"
                     required
@@ -268,7 +325,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-hotel-gold/60 absolute left-3 top-3" />
+                <Mail className="absolute w-4 h-4 text-hotel-gold/60 left-3 top-3" />
                 <input
                   type="email"
                   required
@@ -289,7 +346,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
                 )}
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-hotel-gold/60 absolute left-3 top-3" />
+                <Lock className="absolute w-4 h-4 text-hotel-gold/60 left-3 top-3" />
                 <input
                   type="password"
                   required
@@ -303,24 +360,35 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
 
             {/* Alerts */}
             {errorMsg && (
-              <div className="p-3 bg-red-900/40 border border-red-500/50 rounded-xl flex items-start gap-2 text-red-200 text-xs animate-shake">
+              <div className="flex items-start gap-2 p-3 text-xs text-red-200 border bg-red-900/40 border-red-500/50 rounded-xl animate-shake">
                 <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             {successMsg && (
-              <div className="p-3 bg-emerald-900/40 border border-emerald-500/50 rounded-xl flex items-center gap-2 text-emerald-200 text-xs">
+              <div className="flex items-center gap-2 p-3 text-xs border bg-emerald-900/40 border-emerald-500/50 rounded-xl text-emerald-200">
                 <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>{successMsg}</span>
               </div>
+            )}
+
+            {verificationPending && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendingVerification || !email.trim()}
+                className="w-full text-xs text-hotel-gold underline underline-offset-4 disabled:opacity-50"
+              >
+                {resendingVerification ? 'Sending verification email...' : 'Resend verification email'}
+              </button>
             )}
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-hotel-gold to-hotel-gold-dark hover:from-hotel-gold-light hover:to-hotel-gold text-hotel-emerald-dark font-bold text-xs uppercase tracking-widest transition-all shadow-gold hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex items-center justify-center w-full gap-2 py-3 mt-2 text-xs font-bold tracking-widest uppercase transition-all rounded-xl bg-gradient-to-r from-hotel-gold to-hotel-gold-dark hover:from-hotel-gold-light hover:to-hotel-gold text-hotel-emerald-dark shadow-gold hover:shadow-lg disabled:opacity-50"
             >
               {loading ? (
                 <span>Authenticating...</span>

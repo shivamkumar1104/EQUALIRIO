@@ -69,6 +69,30 @@ cp .env.example .env
 # Edit .env with your API URL and Google Client ID
 ```
 
+### Google Sign-In Setup
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create or select a project and configure the OAuth consent screen. While the app is in testing, add the accounts that need to sign in as test users.
+2. Create an OAuth client ID with application type **Web application**.
+3. Add the frontend's origin under **Authorized JavaScript origins**:
+   - `http://localhost:3000` (this project's Vite port)
+   - Add your deployed frontend origin when deploying.
+4. Put the same client ID in both environment files:
+   - `backend/.env`: `GOOGLE_CLIENT_ID=<client-id>.apps.googleusercontent.com`
+   - `frontend/.env`: `VITE_GOOGLE_CLIENT_ID=<client-id>.apps.googleusercontent.com`
+   - For deployment, set `FRONTEND_URL` in `backend/.env` to the deployed frontend origin so CORS allows it.
+5. Restart both development servers after changing environment variables.
+
+This app uses Google Identity Services to return an ID token; an OAuth client secret is not needed for this sign-in flow. Do not put a client secret in the frontend. The Google button appears when the frontend client ID is configured.
+
+### Email Registration Verification (Brevo)
+
+1. In Brevo, create and verify a sender email address.
+2. In `backend/.env`, set `BREVO_API_KEY` and `BREVO_SENDER_EMAIL` to your Brevo API key and verified sender address. Optionally set `BREVO_SENDER_NAME`.
+3. Ensure `FRONTEND_URL=http://localhost:3000` for local verification links; use your deployed frontend origin in production.
+4. Restart the backend. New email/password registrations receive a verification link; they cannot sign in until they verify. Google sign-in continues to trust Google's verified email.
+
+Keep Brevo's API key only in the backend environment; never add it to a `VITE_` variable or frontend code.
+
 ### 3. Seed the Database
 
 ```bash
@@ -86,7 +110,7 @@ cd backend && npm run dev
 cd frontend && npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) 🎉
+Open [http://localhost:3000](http://localhost:3000) 🎉
 
 ---
 
@@ -97,6 +121,8 @@ Open [http://localhost:5173](http://localhost:5173) 🎉
 |---|---|---|
 | POST | `/api/auth/register` | Public |
 | POST | `/api/auth/login` | Public |
+| GET | `/api/auth/verify-email?token=...` | Public (one-time link) |
+| POST | `/api/auth/resend-verification` | Public |
 | POST | `/api/auth/google` | Public |
 | GET | `/api/auth/me` | Protected |
 | PUT | `/api/auth/profile` | Protected |

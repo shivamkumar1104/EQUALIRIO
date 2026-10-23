@@ -1,46 +1,63 @@
+import { createHash, randomBytes } from "node:crypto";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
+import { sendVerificationEmail } from "../services/email.service.js";
 
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name?.trim() || !email?.trim() || !password) {
       return res.status(400).json({
         success: false,
         message: "Name, email and password are required",
       });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Check existing user
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: "User already exists",
+        message: existingUser.emailVerified
+          ? "User already exists"
+          : "This account still needs email verification. Request a new verification email.",
       });
     }
 
-    // Create user
+    const verificationToken = randomBytes(32).toString("hex");
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: normalizedEmail,
       password,
+      emailVerified: false,
+      emailVerificationTokenHash: hashVerificationToken(verificationToken),
+      emailVerificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
 
-    const token = generateToken(user._id, user.role);
+    try {
+      await sendVerificationEmail(user.email, user.name, verificationToken);
+    } catch (emailError) {
+      console.error("Registration verification email failed:", emailError.message);
+      return res.status(503).json({
+        success: false,
+        verificationRequired: true,
+        message: "Your account was created, but the verification email could not be sent. Check the Brevo sender setup and request a new email.",
+      });
+    }
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
-      token,
-      user,
+      verificationRequired: true,
+      message: "Account created. Check your email for a verification link before signing in.",
     });
   } catch (error) {
     console.error("Register Error:", error);
 
-    const statusCode = error.name === "ValidationError" ? 400 : 500;
+    const statusCode = error.name === "ValidationError" ? 400 : error.code === 11000 ? 409 : 500;
     res.status(statusCode).json({
       success: false,
       message: error.message || "Internal server error",
@@ -60,7 +77,8 @@ export const loginUser = async (req, res) => {
     }
 
     // Find user and explicitly select password field
-    const user = await User.findOne({ email }).select("+password");
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail }).select("+password");
 
     if (!user) {
       return res.status(401).json({
@@ -76,6 +94,14 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
+      });
+    }
+
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        success: false,
+        verificationRequired: true,
+        message: "Verify your email before signing in.",
       });
     }
 
@@ -96,6 +122,79 @@ export const loginUser = async (req, res) => {
     });
   }
 };
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (typeof token !== "string" || !/^[a-f0-9]{64}$/i.test(token)) {
+      return res.status(400).json({ success: false, message: "Invalid or expired verification link." });
+    }
+
+    const user = await User.findOne({
+      emailVerificationTokenHash: hashVerificationToken(token),
+      emailVerificationExpiresAt: { $gt: new Date() },
+      emailVerified: false,
+    }).select("+emailVerificationTokenHash +emailVerificationExpiresAt");
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid or expired verification link." });
+    }
+
+    user.emailVerified = true;
+    user.emailVerificationTokenHash = undefined;
+    user.emailVerificationExpiresAt = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully.",
+      token: generateToken(user._id, user.role),
+      user,
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.status(500).json({ success: false, message: "Could not verify email. Please try again." });
+  }
+};
+
+export const resendVerificationEmail = async (req, res) => {
+  try {
+    const email = req.body.email?.trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+
+    const user = await User.findOne({ email, authProvider: "local" });
+    const message = "If an unverified account exists for that email, a verification link will be sent.";
+
+    if (!user || user.emailVerified) {
+      return res.status(200).json({ success: true, message });
+    }
+
+    const verificationToken = randomBytes(32).toString("hex");
+    user.emailVerificationTokenHash = hashVerificationToken(verificationToken);
+    user.emailVerificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+
+    try {
+      await sendVerificationEmail(user.email, user.name, verificationToken);
+    } catch (emailError) {
+      console.error("Resend verification email failed:", emailError.message);
+      return res.status(503).json({
+        success: false,
+        message: "The verification email could not be sent. Check the Brevo sender configuration and try again.",
+      });
+    }
+
+    return res.status(200).json({ success: true, message });
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    return res.status(500).json({ success: false, message: "Could not resend verification email." });
+  }
+};
+
+const hashVerificationToken = (token) =>
+  createHash("sha256").update(token).digest("hex");
 
 /**
  * Google OAuth Sign-In / Register
@@ -140,7 +239,7 @@ export const googleAuth = async (req, res) => {
       });
     }
 
-    const { sub: googleId, email, name, picture } = payload;
+    const { sub: googleId, email, email_verified: emailVerified, name, picture } = payload;
 
     if (!email) {
       return res.status(400).json({
@@ -149,8 +248,16 @@ export const googleAuth = async (req, res) => {
       });
     }
 
+    if (emailVerified !== true && emailVerified !== "true") {
+      return res.status(401).json({
+        success: false,
+        message: "Google account email is not verified",
+      });
+    }
+
     // Find or create user
-    let user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase();
+    let user = await User.findOne({ email: normalizedEmail });
 
     if (user) {
       // Link googleId if not linked
@@ -160,14 +267,16 @@ export const googleAuth = async (req, res) => {
       if (!user.avatar && picture) {
         user.avatar = picture;
       }
+      user.emailVerified = true;
       await user.save();
     } else {
       user = await User.create({
         name: name || "Google Guest",
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         googleId,
         avatar: picture || "",
         authProvider: "google",
+        emailVerified: true,
         role: "user",
       });
     }

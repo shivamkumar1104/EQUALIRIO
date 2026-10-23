@@ -8,13 +8,14 @@ if (process.env.NODE_ENV !== "production") {
 }
 dotenv.config(); // fallback to default CWD
 
-import app from "./app.js";
-import connectDB from "./config/db.js";
-
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
     try {
+        const [{ default: app }, { default: connectDB }] = await Promise.all([
+            import("./app.js"),
+            import("./config/db.js"),
+        ]);
         await connectDB();
 
         app.listen(PORT, () => {

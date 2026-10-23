@@ -22,7 +22,7 @@ import AdminDashboardModal from './components/AdminDashboardModal';
 import SpaBookingModal from './components/SpaBookingModal';
 
 import { REVIEWS_DATA, HOTEL_INFO } from './data/hotelData';
-import { reviewsAPI, hotelAPI } from './services/api';
+import { reviewsAPI, hotelAPI, authAPI } from './services/api';
 
 export default function App() {
   // User Auth State
@@ -95,6 +95,26 @@ export default function App() {
       });
 
     return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const verificationToken = hashParams.get('verifyEmail');
+    if (!verificationToken) return;
+
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    authAPI.verifyEmail(verificationToken)
+      .then((response) => {
+        if (response.token) localStorage.setItem('hotel_token', response.token);
+        if (response.user) {
+          localStorage.setItem('hotel_user', JSON.stringify(response.user));
+          setUser(response.user);
+        }
+        setToastMessage(response.message || 'Email verified. You are now signed in.');
+      })
+      .catch((error) => {
+        setToastMessage(error.message || 'Email verification failed. Request a new link and try again.');
+      });
   }, []);
 
   // My Bookings & Reservations Dashboard State

@@ -45,6 +45,19 @@ const userSchema = new mongoose.Schema(
             enum: ["local", "google"],
             default: "local",
         },
+        emailVerified: {
+            type: Boolean,
+            default: true,
+        },
+        emailVerificationTokenHash: {
+            type: String,
+            select: false,
+            index: true,
+        },
+        emailVerificationExpiresAt: {
+            type: Date,
+            select: false,
+        },
 
         // User Role
         role: {
@@ -99,6 +112,8 @@ userSchema.methods.toJSON = function(){
 
     delete user.password;
     delete user.__v;
+    delete user.emailVerificationTokenHash;
+    delete user.emailVerificationExpiresAt;
 
     return user;
 }

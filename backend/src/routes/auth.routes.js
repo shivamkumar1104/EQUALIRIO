@@ -2,6 +2,8 @@ import express from "express";
 import {
   registerUser,
   loginUser,
+  verifyEmail,
+  resendVerificationEmail,
   googleAuth,
   getMe,
   updateProfile,
@@ -9,13 +11,16 @@ import {
   getAdminDashboard,
 } from "../controllers/auth.controller.js";
 import { protect, authorize } from "../middlewares/auth.middleware.js";
+import { authLimiter } from "../middlewares/rateLimit.middleware.js";
 
 const router = express.Router();
 
 // Public Authentication Routes
-router.post("/register", registerUser);
-router.post("/login", loginUser);
-router.post("/google", googleAuth);
+router.post("/register", authLimiter, registerUser);
+router.post("/login", authLimiter, loginUser);
+router.get("/verify-email", authLimiter, verifyEmail);
+router.post("/resend-verification", authLimiter, resendVerificationEmail);
+router.post("/google", authLimiter, googleAuth);
 
 // Protected Routes (Requires valid JWT Token)
 router.get("/me", protect, getMe);

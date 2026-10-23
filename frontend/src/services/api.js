@@ -43,6 +43,10 @@ export const authAPI = {
   register: (payload) => request("POST", "/auth/register", payload),
   login: (payload) => request("POST", "/auth/login", payload),
   googleLogin: (token) => request("POST", "/auth/google", { token }),
+  verifyEmail: (token) =>
+    request("GET", `/auth/verify-email?${new URLSearchParams({ token })}`),
+  resendVerification: (email) =>
+    request("POST", "/auth/resend-verification", { email }),
   getMe: () => request("GET", "/auth/me", null, true),
   updateProfile: (data) => request("PUT", "/auth/profile", data, true),
   logout: () => {
@@ -155,4 +159,3 @@ export const membershipAPI = {
 };
 
 export default { authAPI, suitesAPI, bookingsAPI, reviewsAPI, diningAPI, paymentAPI, hotelAPI, contentAPI, membershipAPI };
-
