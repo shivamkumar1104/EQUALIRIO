@@ -144,7 +144,6 @@ bookingSchema.pre("save", function (next) {
 // Indexes for common queries
 bookingSchema.index({ user: 1, status: 1 });
 bookingSchema.index({ suite: 1, checkIn: 1, checkOut: 1 });
-bookingSchema.index({ bookingId: 1 });
 bookingSchema.index({ status: 1, createdAt: -1 });
 bookingSchema.index({ "guestInfo.email": 1 });
 
