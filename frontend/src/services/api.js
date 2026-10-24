@@ -3,7 +3,9 @@
  * All backend calls go through this file — never fetch() directly in components.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL } from "../config/api";
+
+const BASE_URL = `${API_BASE_URL}/api`;
 
 /**
  * Core HTTP helper — attaches JWT token and handles JSON.
