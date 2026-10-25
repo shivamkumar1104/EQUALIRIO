@@ -1,0 +1,21 @@
+flowchart TD
+    A([Start registration]) --> B[Enter email address]
+    B --> C{Email already registered?}
+    C -- Yes --> D[Show sign-in or account recovery]
+    D --> Z([End])
+    C -- No --> E[Send OTP to email]
+    E --> F[Enter OTP]
+    F --> G{OTP valid and not expired?}
+    G -- No --> H{Retry limit reached?}
+    H -- No --> I[Show error and allow OTP retry]
+    I --> F
+    H -- Yes --> J[Block verification temporarily]
+    J --> Z
+    G -- Yes --> K[Confirm email and unlock registration form]
+    K --> L[Enter account details]
+    L --> M{Details valid?}
+    M -- No --> N[Show validation errors]
+    N --> L
+    M -- Yes --> O[Create account for verified email]
+    O --> P[Show registration success]
+    P --> Z

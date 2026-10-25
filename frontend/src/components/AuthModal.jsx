@@ -18,6 +18,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const googleBtnRef = useRef(null);
+  const googleInitializedRef = useRef(false);
+  const googleResponseHandlerRef = useRef(null);
 
   // Initialize and render Google Sign In button
   useEffect(() => {
@@ -35,12 +37,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
       if (!window.google?.accounts?.id || !googleBtnRef.current) return false;
 
       try {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
+        if (!googleInitializedRef.current) {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: (response) => googleResponseHandlerRef.current?.(response),
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+          googleInitializedRef.current = true;
+        }
 
         googleBtnRef.current.innerHTML = '';
         window.google.accounts.id.renderButton(googleBtnRef.current, {
@@ -120,6 +125,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
       setGoogleLoading(false);
     }
   };
+  googleResponseHandlerRef.current = handleGoogleResponse;
 
   // Handle Standard Email & Password Submit
   const handleSubmit = async (e) => {
