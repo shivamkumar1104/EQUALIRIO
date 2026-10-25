@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { HOTEL_INFO } from '../data/hotelData';
 import { Calendar, Users, Sparkles, Star, MapPin, ArrowRight, ShieldCheck } from 'lucide-react';
 
-export default function Hero({ onSearchBooking, hotelInfo }) {
+export default function Hero({ onSearchBooking, hotelInfo, reviewStats }) {
   const { t } = useTranslation();
   const info = hotelInfo || HOTEL_INFO;
   const [checkIn, setCheckIn] = useState('2026-09-10');
@@ -49,7 +49,11 @@ export default function Hero({ onSearchBooking, hotelInfo }) {
             {t('hero.badge')}
           </span>
           <span className="w-1 h-1 rounded-full bg-hotel-gold"></span>
-          <span className="font-mono text-xs text-white/90">{info.rating} ⭐ ({info.reviewCount} Reviews)</span>
+          {reviewStats?.count > 0 && (
+            <span className="font-mono text-xs text-white/90">
+              {Number(reviewStats.average).toFixed(1)} ⭐ ({reviewStats.count} {reviewStats.count === 1 ? 'review' : 'reviews'})
+            </span>
+          )}
         </div>
 
         {/* Main Heading */}

@@ -1,149 +1,133 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { REVIEWS_DATA } from '../data/hotelData';
 import { Star, Quote, MessageSquarePlus, Award, CheckCircle } from 'lucide-react';
 
-export default function Reviews({ onWriteReview, reviewsList }) {
+export default function Reviews({
+  onWriteReview,
+  reviewsList = [],
+  reviewStats = { average: null, count: 0 },
+  isLoading = false,
+  loadError = '',
+}) {
   const { t } = useTranslation();
-  const reviews = reviewsList || REVIEWS_DATA;
+  const hasReviews = reviewsList.length > 0 && reviewStats.count > 0;
 
   return (
-    <section id="reviews" className="py-24 px-4 sm:px-6 lg:px-8 bg-hotel-emerald-dark text-white relative">
-      <div className="max-w-7xl mx-auto">
-        
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 text-hotel-gold text-xs uppercase tracking-[0.3em] font-medium mb-2">
-            <Award className="w-4 h-4" /> {t('reviews.subtitle')}
+    <section id="reviews" className="relative bg-hotel-emerald-dark px-4 py-24 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto mb-12 max-w-3xl text-center">
+          <div className="mb-2 inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.3em] text-hotel-gold">
+            <Award className="h-4 w-4" /> {t('reviews.subtitle')}
           </div>
-          <h2 className="text-3xl sm:text-5xl font-serif text-white font-normal mb-4">
+          <h2 className="mb-4 font-serif text-3xl font-normal text-white sm:text-5xl">
             {t('reviews.title')}
           </h2>
-          <p className="text-gray-300 text-sm font-light leading-relaxed">
-            {t('reviews.basedOn')}
+          <p className="text-sm font-light leading-relaxed text-gray-300">
+            Reviews are shared by guests after a completed stay.
           </p>
         </div>
 
-        {/* Rating Breakdown Banner */}
-        {(() => {
-          // Compute dynamic ratings from reviews
-          const allRatings = reviews.map(r => Number(r.rating || r.ratings?.overall || 5));
-          const overallRating = allRatings.length > 0
-            ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(2)
-            : '4.98';
-
-          // Compute sub-ratings from reviews that have detailed ratings
-          const subCategories = [
-            { key: 'service', label: 'Service & Butler' },
-            { key: 'cleanliness', label: 'Villa Privacy' },
-            { key: 'dining', label: 'Gastronomy' },
-            { key: 'spa', label: 'Spa & Wellness' },
-          ];
-
-          const computeSubRating = (key) => {
-            const vals = reviews
-              .filter(r => r.ratings && r.ratings[key] != null)
-              .map(r => Number(r.ratings[key]));
-            if (vals.length > 0) return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
-            // Fallback: derive from overall
-            const base = parseFloat(overallRating);
-            const jitter = key === 'dining' ? -0.08 : key === 'spa' ? 0.02 : 0;
-            return Math.min(5, base + jitter).toFixed(1);
-          };
-
-          return (
-        <div className="bg-hotel-emerald/40 border border-hotel-gold/30 rounded-3xl p-6 sm:p-8 mb-16 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-          
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-hotel-gold text-hotel-emerald-dark flex items-center justify-center font-serif text-3xl font-bold shadow-gold">
-              {overallRating}
-            </div>
-            <div>
-              <div className="flex text-hotel-gold gap-1 mb-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-hotel-gold" />
-                ))}
-              </div>
-              <span className="text-xs uppercase tracking-widest text-white font-semibold">
-                {t('reviews.basedOn')}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center text-xs text-gray-300 font-light border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-8">
-            {subCategories.map((cat) => (
-              <div key={cat.key}>
-                <span className="block text-hotel-gold font-bold text-base font-serif">{computeSubRating(cat.key)} / 5</span>
-                <span className="text-[10px] uppercase">{cat.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={onWriteReview}
-            className="shrink-0 bg-white/10 hover:bg-hotel-gold hover:text-hotel-emerald-dark text-white font-bold text-xs uppercase tracking-widest px-6 py-3 rounded-full border border-hotel-gold/40 transition-all flex items-center gap-2"
-          >
-            <MessageSquarePlus className="w-4 h-4" />
-            <span>{t('reviews.writeReview')}</span>
-          </button>
-
-        </div>
-          );
-        })()}
-
-        {/* Reviews Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-          {reviews.map((rev, idx) => {
-            const author = rev.author || rev.user?.name || 'Verified Guest';
-            const avatar = rev.avatar || rev.user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80';
-            const rating = Number(rev.rating || rev.ratings?.overall || 5);
-            const content = rev.content || rev.comment || '';
-            const title = rev.title || 'Exceptional Stay';
-            const role = rev.role || (rev.isVerifiedStay ? 'Verified Stay Guest' : (rev.guestType ? `${rev.guestType.charAt(0).toUpperCase() + rev.guestType.slice(1)} Traveler` : 'Guest Reviewer'));
-            const date = rev.date || rev.stayedInMonth || (rev.createdAt ? new Date(rev.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'Recent Stay');
-
-            return (
-              <div
-                key={rev._id || rev.id || `rev-${idx}`}
-              className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 flex flex-col justify-between hover:border-hotel-gold/50 transition-all duration-300 relative group"
-              >
+        {isLoading ? (
+          <p role="status" className="py-10 text-center text-sm text-gray-300">Loading guest reviews...</p>
+        ) : loadError ? (
+          <p role="alert" className="py-10 text-center text-sm text-red-200">{loadError}</p>
+        ) : hasReviews ? (
+          <>
+            <div className="mb-12 flex flex-col items-center justify-between gap-6 rounded-3xl border border-hotel-gold/30 bg-hotel-emerald/40 p-6 shadow-2xl md:flex-row sm:p-8">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-hotel-gold font-serif text-3xl font-bold text-hotel-emerald-dark shadow-gold">
+                  {Number(reviewStats.average).toFixed(1)}
+                </div>
                 <div>
-                  <Quote className="w-8 h-8 text-hotel-gold/30 mb-4 group-hover:text-hotel-gold/60 transition-colors" />
-
-                  <div className="flex text-hotel-gold gap-1 mb-3">
-                    {[...Array(Math.min(5, Math.max(1, rating)))].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-hotel-gold" />
+                  <div className="mb-1 flex gap-1 text-hotel-gold">
+                    {[...Array(5)].map((_, index) => (
+                      <Star
+                        key={index}
+                        className={`h-4 w-4 ${index < Math.round(reviewStats.average) ? 'fill-hotel-gold' : 'opacity-30'}`}
+                      />
                     ))}
                   </div>
-
-                  <h3 className="font-serif text-xl text-white font-normal mb-2">
-                    "{title}"
-                  </h3>
-
-                  <p className="text-gray-300 text-xs font-light leading-relaxed mb-4 italic">
-                    "{content}"
-                  </p>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-white">
+                    Based on {reviewStats.count} verified {reviewStats.count === 1 ? 'stay' : 'stays'}
+                  </span>
                 </div>
-
-                <div className="flex items-center gap-3 pt-4 border-t border-white/10">
-                  <img
-                    src={avatar}
-                    alt={author}
-                    className="w-10 h-10 rounded-full object-cover border border-hotel-gold/40"
-                  />
-                  <div>
-                    <h4 className="text-xs font-semibold text-white flex items-center gap-1">
-                      <span>{author}</span>
-                      <CheckCircle className="w-3 h-3 text-hotel-gold" />
-                    </h4>
-                    <span className="text-[10px] text-gray-400 block">{role} • {date}</span>
-                  </div>
-                </div>
-
               </div>
-            );
-          })}
-        </div>
+              <button
+                type="button"
+                onClick={onWriteReview}
+                className="flex shrink-0 items-center gap-2 rounded-full border border-hotel-gold/40 bg-white/10 px-6 py-3 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-hotel-gold hover:text-hotel-emerald-dark"
+              >
+                <MessageSquarePlus className="h-4 w-4" />
+                <span>{t('reviews.writeReview')}</span>
+              </button>
+            </div>
 
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
+              {reviewsList.map((review) => {
+                const rating = Number(review.ratings?.overall) || 0;
+                const author = review.user?.name || 'Guest';
+                const date = review.createdAt
+                  ? new Date(review.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+                  : '';
+
+                return (
+                  <article
+                    key={review._id}
+                    className="relative flex flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-5 transition-all hover:border-hotel-gold/50 sm:p-6"
+                  >
+                    <div>
+                      <Quote className="mb-4 h-8 w-8 text-hotel-gold/40" />
+                      <div className="mb-3 flex gap-1 text-hotel-gold" aria-label={`${rating} out of 5 stars`}>
+                        {[...Array(5)].map((_, index) => (
+                          <Star key={index} className={`h-3.5 w-3.5 ${index < Math.round(rating) ? 'fill-hotel-gold' : 'opacity-30'}`} />
+                        ))}
+                      </div>
+                      {review.title && <h3 className="mb-2 font-serif text-xl font-normal text-white">{review.title}</h3>}
+                      <p className="mb-4 whitespace-pre-wrap text-xs font-light italic leading-relaxed text-gray-300">{review.comment}</p>
+                    </div>
+                    <div className="flex items-center gap-3 border-t border-white/10 pt-4">
+                      {review.user?.avatar ? (
+                        <img
+                          src={review.user.avatar}
+                          alt=""
+                          loading="lazy"
+                          className="h-10 w-10 rounded-full border border-hotel-gold/40 object-cover"
+                        />
+                      ) : (
+                        <div aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-full border border-hotel-gold/40 bg-hotel-gold/10 text-sm font-semibold text-hotel-gold">
+                          {author.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="flex items-center gap-1 text-xs font-semibold text-white">
+                          <span>{author}</span>
+                          {review.isVerifiedStay && <CheckCircle className="h-3 w-3 text-hotel-gold" aria-label="Verified stay" />}
+                        </h4>
+                        <span className="block text-[10px] text-gray-400">
+                          {review.isVerifiedStay ? 'Verified stay' : 'Guest'}{date ? ` · ${date}` : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="mx-auto max-w-2xl rounded-3xl border border-dashed border-hotel-gold/30 bg-white/[0.03] px-6 py-10 text-center">
+            <MessageSquarePlus className="mx-auto mb-3 h-8 w-8 text-hotel-gold/70" />
+            <h3 className="font-serif text-xl text-white">No guest reviews yet</h3>
+            <p className="mt-2 text-sm text-gray-300">After your completed stay, you can share an honest review here.</p>
+            <button
+              type="button"
+              onClick={onWriteReview}
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-hotel-gold/40 bg-white/10 px-6 py-3 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-hotel-gold hover:text-hotel-emerald-dark"
+            >
+              <MessageSquarePlus className="h-4 w-4" />
+              <span>{t('reviews.writeReview')}</span>
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

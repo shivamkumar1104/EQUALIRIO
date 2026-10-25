@@ -52,8 +52,8 @@ const hotelSchema = new mongoose.Schema(
       minimumAge: { type: Number, default: 18 },
     },
     stats: {
-      rating: { type: Number, default: 4.98 },
-      reviewCount: { type: Number, default: 342 },
+      rating: { type: Number },
+      reviewCount: { type: Number },
       totalSuites: { type: Number, default: 18 },
       yearsOfExcellence: { type: Number, default: 12 },
     },

@@ -1,8 +1,9 @@
 /**
  * Database Seed Script
- * Populates MongoDB with luxury hotel info, suites, amenities, FAQs, gallery, and initial reviews.
+ * Populates MongoDB with hotel info, suites, amenities, FAQs, and gallery.
  *
- * Usage: npm run seed (or node src/scripts/seed.js)
+ * This script replaces seeded hotel content and requires explicit opt-in.
+ * Never run it against production or a database containing irreplaceable data.
  */
 
 import mongoose from "mongoose";
@@ -13,8 +14,6 @@ import Hotel from "../models/Hotel.js";
 import Amenity from "../models/Amenity.js";
 import FAQ from "../models/FAQ.js";
 import Gallery from "../models/Gallery.js";
-import User from "../models/User.js";
-import Review from "../models/Review.js";
 
 dotenv.config();
 
@@ -50,8 +49,6 @@ const HOTEL_SEED = {
     minimumAge: 18,
   },
   stats: {
-    rating: 4.98,
-    reviewCount: 342,
     totalSuites: 18,
     yearsOfExcellence: 12,
   },
@@ -324,6 +321,14 @@ const GALLERY_SEED = [
 
 const seed = async () => {
   try {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("The destructive seed script cannot run in production.");
+    }
+    if (process.env.SEED_ALLOW_DESTRUCTIVE !== "true") {
+      throw new Error(
+        "This seed script deletes and replaces hotel content. Set SEED_ALLOW_DESTRUCTIVE=true only for a disposable development database."
+      );
+    }
     if (!process.env.MONGODB_URL) {
       throw new Error("MONGODB_URL is not set in .env");
     }
@@ -361,63 +366,8 @@ const seed = async () => {
     const insertedGallery = await Gallery.insertMany(GALLERY_SEED);
     console.log(`📸 Seeded ${insertedGallery.length} gallery items`);
 
-    // 6. Demo Users & Reviews
-    let demoUser = await User.findOne({ email: "guest.elena@equalirio-resort.com" });
-    if (!demoUser) {
-      demoUser = await User.create({
-        name: "Elena Rostova",
-        email: "guest.elena@equalirio-resort.com",
-        password: "Password123!",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-        role: "user",
-      });
-    }
-
-    let demoUser2 = await User.findOne({ email: "guest.marcus@equalirio-resort.com" });
-    if (!demoUser2) {
-      demoUser2 = await User.create({
-        name: "Dr. Marcus Vance",
-        email: "guest.marcus@equalirio-resort.com",
-        password: "Password123!",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-        role: "user",
-      });
-    }
-
-    await Review.deleteMany({});
-    if (insertedSuites.length > 0) {
-      await Review.create([
-        {
-          user: demoUser._id,
-          suite: insertedSuites[0]._id,
-          ratings: { overall: 5, cleanliness: 5, service: 5, location: 5, value: 5, amenities: 5 },
-          title: "An Oasis of Pure Serenity",
-          comment: "Equalirio redefined luxury for me. The seamless integration of eco-sustainable architecture with 6-star service and dining is unparalleled anywhere in the world.",
-          guestType: "couple",
-          stayedInMonth: "August 2026",
-          status: "approved",
-          isVerifiedStay: true,
-        },
-        {
-          user: demoUser2._id,
-          suite: insertedSuites[1]?._id || insertedSuites[0]._id,
-          ratings: { overall: 5, cleanliness: 5, service: 5, location: 5, value: 5, amenities: 5 },
-          title: "Unrivaled Butler Service & Views",
-          comment: "Our butler Carlos anticipated every single need before we even voiced it. Sunset over the ocean from our private infinity pool was a memory we will treasure forever.",
-          guestType: "couple",
-          stayedInMonth: "July 2026",
-          status: "approved",
-          isVerifiedStay: true,
-        },
-      ]);
-      console.log(`⭐ Seeded verified guest reviews`);
-    }
-
-    // Allow post-save aggregate recalculations to complete
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
     await mongoose.disconnect();
-    console.log("\n🎉 Full database seed complete! Disconnected from MongoDB.");
+    console.log("\n🎉 Database seed complete. No guest reviews were generated or deleted.");
     process.exit(0);
   } catch (error) {
     console.error("❌ Seed failed:", error.message);

@@ -1,6 +1,8 @@
 import express from "express";
 import {
   registerUser,
+  requestRegistrationOtp,
+  verifyRegistrationOtp,
   loginUser,
   verifyEmail,
   resendVerificationEmail,
@@ -18,6 +20,8 @@ const router = express.Router();
 
 // Public Authentication Routes
 router.post("/register", authLimiter, registerUser);
+router.post("/register/request-otp", authLimiter, requestRegistrationOtp);
+router.post("/register/verify-otp", authLimiter, verifyRegistrationOtp);
 router.post("/login", authLimiter, loginUser);
 router.get("/verify-email", authLimiter, verifyEmail);
 router.post("/resend-verification", authLimiter, resendVerificationEmail);

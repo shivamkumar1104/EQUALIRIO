@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOTEL_INFO } from '../data/hotelData';
-import { Calendar, Globe, Menu, X, Sparkles, ChevronDown, User, LogOut, Receipt, Utensils, LayoutDashboard } from 'lucide-react';
+import { Calendar, Globe, Menu, X, Sparkles, ChevronDown, User, LogOut, Receipt, Utensils, LayoutDashboard, Home } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../i18n';
 
 export default function Navbar({
@@ -12,7 +12,8 @@ export default function Navbar({
   onOpenAuth,
   onLogout,
   onOpenMyBookings,
-  onOpenAdmin
+  onOpenAdmin,
+  onOpenHost
 }) {
   const { t, i18n } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -140,6 +141,14 @@ export default function Navbar({
 
             {/* CTA Reserve Suite */}
             <button
+              onClick={onOpenHost}
+              className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2.5 text-xs font-semibold tracking-wider text-white transition-colors hover:border-hotel-gold/50 hover:bg-white/10 hover:text-hotel-gold"
+            >
+              <Home className="h-3.5 w-3.5" />
+              <span>Become a host</span>
+            </button>
+
+            <button
               onClick={() => onOpenBooking()}
               className="flex items-center gap-2 bg-gradient-to-r from-hotel-gold to-hotel-gold-dark hover:from-hotel-gold-light hover:to-hotel-gold text-hotel-emerald-dark font-semibold text-xs tracking-wider uppercase px-5 py-2.5 rounded-full shadow-gold hover:shadow-lg transition-all transform hover:-translate-y-0.5"
             >
@@ -222,6 +231,19 @@ export default function Navbar({
                       <button
                         onClick={() => {
                           setUserDropdownOpen(false);
+                          if (onOpenHost) onOpenHost();
+                        }}
+                        className="w-full rounded-xl px-3 py-2 text-left text-xs text-gray-200 transition-colors hover:bg-white/10 hover:text-hotel-gold"
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <Home className="h-3.5 w-3.5 text-hotel-gold" />
+                          <span>Host your stay</span>
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setUserDropdownOpen(false);
                           if (onOpenMyBookings) onOpenMyBookings();
                         }}
                         className="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2.5 text-gray-200 hover:bg-white/10 hover:text-hotel-gold transition-colors"
@@ -258,6 +280,7 @@ export default function Navbar({
                 </div>
               </div>
             ) : (
+            <>
               <button
                 onClick={onOpenAuth}
                 className="flex items-center gap-1.5 text-xs text-gray-200 hover:text-hotel-gold px-3.5 py-2 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors"
@@ -265,6 +288,7 @@ export default function Navbar({
                 <User className="w-3.5 h-3.5 text-hotel-gold" />
                 <span className="font-serif tracking-wider uppercase text-[11px]">{t('nav.signIn')}</span>
               </button>
+            </>
             )}
           </div>
 
@@ -394,6 +418,19 @@ export default function Navbar({
                   <span>{t('nav.register')}</span>
                 </button>
               )}
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (onOpenHost) onOpenHost();
+                }}
+                className="w-full rounded-xl border border-white/15 py-2.5 text-xs font-semibold uppercase tracking-wider text-gray-100 transition-colors hover:border-hotel-gold/40 hover:text-hotel-gold"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Become a host
+                </span>
+              </button>
 
               <button
                 onClick={() => {

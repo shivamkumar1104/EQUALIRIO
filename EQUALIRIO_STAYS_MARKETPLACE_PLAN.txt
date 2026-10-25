@@ -1,0 +1,514 @@
+EQUALIRIO PROJECT AUDIT
+Airbnb-inspired stays marketplace roadmap
+=========================================
+
+Goal
+----
+EQUALIRIO ko stays/accommodation marketplace mein evolve karna: guests
+places aur stays discover karke dates select karein, host/property rules
+ke mutabik booking karein, payment karein, host se communicate karein,
+aur completed stay ke baad review dein. Hosts apni property/listings,
+calendar, bookings aur earnings manage karein.
+
+Yeh original EQUALIRIO product ka plan hai. Airbnb ka naam, logo, copy,
+photos, proprietary screens ya exact visual design copy na karein. Apna
+brand, content aur user experience banayein.
+
+
+1. Existing project ka audit
+----------------------------
+
+Project abhi kya hai:
+- EQUALIRIO luxury resort/hotel booking website hai.
+- Frontend: React 18 + Vite; single-page experience, suite cards,
+  booking flow, guest/admin modals.
+- Backend: Node.js + Express REST API.
+- Database: MongoDB/Mongoose.
+- Authentication: email/password, Google sign-in, JWT; email OTP
+  registration flow workspace mein add hua hai.
+- Existing accommodation model: Suite, hotel-specific categories,
+  price per night, capacity, amenities, images, ratings.
+- Existing Booking model: suite, dates, guests, add-ons, guest info,
+  price snapshot, payment and reservation status.
+- Existing availability check date conflicts check karta hai.
+- Existing Razorpay payment/order modules aur booking confirmation flow
+  hain; deployment/test/live setup independently verify karna hoga.
+- Reviews, dining, memberships, FAQs, gallery, amenities, hotel content,
+  guest/admin dashboard aur reservation data bhi present hain.
+- Current UI aur workflows ek resort/hotel brand ke around hain; open
+  multi-host, multi-property marketplace model abhi nahi hai.
+- Dedicated automated test suite nazar nahi aayi; backend test script
+  placeholder hai. Production readiness ke liye tests add karne honge.
+
+Code areas jo extension mein kaam aayenge:
+- frontend/src/App.jsx
+- frontend/src/components/ (Suites, BookingModal, Reviews, AuthModal,
+  MyBookingsModal, AdminDashboardModal)
+- frontend/src/services/api.js
+- frontend/src/data/hotelData.js
+- backend/src/app.js, backend/src/routes/, backend/src/controllers/
+- backend/src/models/ (Suite, Booking, User, Review, Hotel)
+- backend/src/services/ (availability, booking, pricing, review)
+- backend/src/controllers/payment.controller.js
+- backend/src/config/razorpay.js
+- backend/src/scripts/seed.js
+
+Current implementation progress (verified in code, 2026-10-26):
+- Host applications, host approval, listing drafts, edits, moderation and
+  published-stay search exist. A host can now pause a published listing.
+- Discovery supports city, guest capacity and property-type filters; dates,
+  listing detail pages, maps, availability and total-price quotes are absent.
+- Existing hotel/suite bookings and Razorpay paths remain separate from
+  marketplace listing bookings; no migration or marketplace payment flow exists.
+- Hotel-suite reviews require a checked-out booking. Fake review fixtures and
+  fake rating claims were removed. Review uniqueness is now per booking.
+- Before deploying the changed review unique index, inspect and migrate the
+  existing MongoDB `user_1_suite_1` index safely; do not drop indexes or alter
+  live data without a backup and migration review.
+- Host identity/KYC, payout setup, image upload, calendars, listing bookings,
+  marketplace payments, refunds, messaging and listing-specific reviews remain
+  unimplemented.
+- Frontend production build and changed-backend syntax checks pass. No
+  MongoDB-backed marketplace integration or end-to-end tests exist yet.
+- The legacy hotel seed script still replaces hotel catalog content, but it
+  now refuses production and requires `SEED_ALLOW_DESTRUCTIVE=true`.
+
+Execution rule for every phase:
+Status key: [x] implemented and checked; [~] partially implemented; [ ] not
+implemented. A checkbox is not a claim of production deployment.
+1. Implement one bounded step from the ordered phases below.
+2. Check its acceptance criteria against the actual UI/API/model behavior.
+3. Run the narrowest available build, syntax check and focused tests.
+4. Fix every failure introduced by that step, then rerun the same checks.
+5. Mark a step complete only when the checks pass; record blocked external
+   decisions separately and do not claim production readiness from a build.
+Do not start a later dependent phase while its prerequisite is incomplete.
+Independent checks may run in parallel; code changes must be coordinated and
+retested together before marking the step complete.
+
+
+2. Product direction / initial assumptions
+------------------------------------------
+
+Is roadmap ka recommended target:
+- Multi-host stays marketplace, jahan hosts properties list kar saken.
+- EQUALIRIO apni existing resort listings ke saath initial host ban sakta hai.
+- Pehle ek country/region aur ek currency se MVP launch karein.
+- Pehle property type ko "stay/accommodation" rakhein; flights, experiences,
+  restaurant bookings aur global multi-currency ko baad mein assess karein.
+- Existing hotel booking ko abruptly delete/replace na karein. Store ko
+  "Stays" marketplace mein evolve karte waqt old suite/booking records aur
+  admin tasks ko safely migrate ya backward-compatible rakhein.
+
+Implementation shuru karne se pehle owner ko confirm karna hoga:
+[Open decision] Marketplace mein outside hosts onboard honge, ya sirf
+EQUALIRIO listings? Current code already has outside-host applications.
+[Open decision] Booking host approval se hogi (request-to-book), turant
+(instant book), ya host/property ke hisaab se dono modes allowed honge?
+[Open decision] Guest checkout allowed hai, ya booking ke liye account required hai?
+[Open decision] Launch geography, currency, tax/fee rules, payment method aur
+payout provider kya honge?
+[Open decision] Cancellation/refund, security deposit, guest age, identity
+verification, damage/dispute aur customer-support policies kya hongi?
+[Open decision] Host payouts kab release honge, aur platform commission kitna hoga?
+
+Until the owner decides otherwise, use the documented baseline:
+registered guests, request-to-book first, a single launch region/currency,
+and EQUALIRIO as the initial host. Do not implement KYC, payout, tax, refund
+or legal policy assumptions that need owner/provider decisions.
+
+
+3. Priority 0 - Marketplace foundation
+--------------------------------------
+
+[x] Marketplace roles define karein: guest, host, admin/support. Ek user
+    guest aur host dono ho sake; role check aur permissions server-side hon.
+    Host capability is represented by an approved HostProfile; admin routes
+    require the existing admin role. Separate support-agent access is pending.
+
+[x] Existing Suite ko seedha "Product" na banayein. Accommodation listing
+    domain ko model karein aur existing resort suites ko properties/listings
+    ke roop mein map karne ka safe migration plan banayein.
+    StayListing is separate from Suite; the actual Suite-to-listing migration
+    and production data plan are still pending.
+
+[~] MongoDB data model aur indexes design karein:
+    - HostProfile: user, public name, contact/verification state, payout state.
+    - Property/Listing: host, title, description, type, capacity, bedrooms,
+      beds, bathrooms, amenities, house rules, location, coordinates,
+      published status, check-in/out instructions.
+    - ListingPhoto: URL, order, alt text, cover image, moderation state.
+    - ListingAvailability/CalendarBlock: listing, date range, block reason.
+    - NightlyRate/PriceRule: listing, dates, minimum nights, price, currency.
+    - Booking: listing, guest, host, date range, guest count, immutable
+      listing/price/address snapshots and booking status.
+    - Payment, Refund and HostPayout: provider identifiers, money amounts,
+      status, event history and reconciliation fields.
+    - Conversation/Message: booking/listing participants, safe message body,
+      timestamps, read state and moderation/report metadata.
+    - Review: completed booking, author, target listing/host, rating, response.
+    - Host verification/document records only if the chosen compliance flow
+      and secure storage requirements have been approved.
+
+[~] Currency/money representation standardize karein (integer minor units,
+    jaise paise/cents, plus currency code); frontend totals par bharosa na karein.
+    Listings use minor units; marketplace booking quotes and payments do not exist.
+
+[~] Define allowed state transitions for listing, booking, payment, refund,
+    payout and review. Status changes audit log mein record hon.
+    Listing states exist but the full transition audit log and other workflows
+    are not implemented.
+
+[x] Location model mein display address aur private exact address alag rakhein.
+    Public map/search par approximate location dikhane ki policy decide karein.
+    Exact address is excluded from public listing queries; map precision policy
+    remains an owner decision.
+
+[~] Seed/import script banayein jo current EQUALIRIO suites ko sample/live
+    listings mein consistently convert kare. Production data overwrite na ho.
+    The current content seed is explicitly guarded against accidental and
+    production runs, but an idempotent Suite-to-listing migration is still
+    required before importing real data.
+
+
+4. Priority 1 - Host onboarding and listing management
+-----------------------------------------------------
+
+[~] "Become a host" onboarding flow:
+    - Host profile/contact details.
+    - Hosting rules/policies acceptance.
+    - Payout onboarding via supported payment provider.
+    - Identity/business verification provider/manual review, launch region
+      ki legal requirements ke mutabik.
+    - Clear incomplete, pending-review, approved, rejected states.
+    Basic application/review states exist. Policy acceptance, payout onboarding
+    and identity/business verification are pending owner/provider decisions.
+
+[~] Host dashboard banayein:
+    - Listing overview and draft/published/paused state.
+    - Booking requests, upcoming stays and calendar.
+    - Earnings/payout status and actionable alerts.
+    - Guest communication and support entry point.
+    Listing drafts/review states and pause action exist; bookings, calendar,
+    payouts, communication and support are not yet wired.
+
+[~] Listing editor steps:
+    - Property type, location and map pin.
+    - Title, description and accessibility details.
+    - Guest capacity, bedrooms, beds, bathrooms.
+    - Amenities, safety features and house rules.
+    - Photos upload, reorder, cover photo, alt text.
+    - Nightly base price, fees and minimum/maximum nights.
+    - Availability and booking/cancellation settings.
+    - Preview, submit for moderation, publish/unpublish.
+    The current editor handles basic listing text, type, location, capacity,
+    one externally hosted photo URL and nightly price. Real upload/reorder,
+    accessibility, rules, fees, preview and full publish controls remain.
+
+[~] Server-side validation karein: owner-only edits, required fields,
+    acceptable image type/size, coordinates/date/price bounds, safe HTML/text.
+
+[~] Listing moderation/reporting aur unpublished/blocked status implement karein.
+    Host apni listing edit kare; kisi doosre host ki listing access na kar sake.
+    Owner checks, admin moderation and host pause exist; reporting and blocked
+    state are still pending.
+
+
+5. Priority 1 - Guest discovery and listing pages
+-------------------------------------------------
+
+[~] Stays search UI:
+    - Destination/city/region search.
+    - Check-in/check-out dates.
+    - Adults/children/infants/pets, as supported by product policy.
+    - Search results with total price context and availability.
+    Current UI supports destination, guest count and type only. Dates and
+    availability-aware totals remain pending.
+
+[~] Search API filters:
+    - Geographic area/radius or selected map bounds.
+    - Date availability and minimum nights.
+    - Guest capacity, property type, price, bedrooms and amenities.
+    - Rating, instant-book, accessibility and other approved filters.
+    - Safe sorting and validated server-side pagination.
+    Current API supports city/country, guest capacity, type, price, amenities,
+    sorting and pagination; date availability, rating and map filters are absent.
+
+[ ] Geocoding/maps provider select karein. API key restrictions, usage limits,
+    privacy disclosure and provider cost assess karein. Map ko search results
+    ke saath synchronize karein; provider-specific SDK ko app mein isolate karein.
+
+[ ] Listing detail page:
+    - Photo gallery, property description and features.
+    - Host profile/verification badges (sirf verified status par).
+    - Location map; private exact address booking se pehle expose na ho.
+    - Availability/calendar, guest rules, check-in/out details.
+    - Total price breakdown: nightly prices, taxes, cleaning/guest/platform fees.
+    - Cancellation policy and house rules.
+    - Reviews tied to completed/eligible stays.
+    - Report listing and accessibility information.
+
+[ ] Responsive and accessible UI: keyboard support, labels, focus, alt text,
+    date-picker accessibility, loading/error/empty states.
+
+[ ] Wishlist/save stays, recent searches and recommendation features MVP ke
+    baad add karein; guest consent/privacy requirements follow karein.
+
+
+6. Priority 1 - Availability, pricing and booking
+-------------------------------------------------
+
+[ ] Calendar API: host blocks dates, existing reservations, minimum stay,
+    check-in/out restrictions and seasonal rates.
+
+[ ] Availability check ke saath booking creation par bhi conflict atomically
+    prevent karein. Sirf pehle check karke baad mein write karna race condition
+    paida karta hai; concurrent booking tests aur reservation/transaction
+    strategy implement karein.
+
+[ ] Booking quote server par calculate ho:
+    - Requested date range ki per-night rates.
+    - Nights/minimum stay/guest capacity.
+    - Approved cleaning/guest/platform fees.
+    - Local tax and currency.
+    - Discount eligibility and final total.
+    Client-provided totals/rates ko kabhi trusted na maanein.
+
+[ ] Quote ko short-lived, tamper-resistant snapshot/token ke saath bind karein,
+    ya booking submit karte waqt saari values fresh recalculate karein.
+
+[ ] Request-to-book flow:
+    - Guest date/guest count select kare, rules accept kare aur request submit kare.
+    - Host accept/decline kar sake.
+    - Request expiry, guest notification aur host response deadline define ho.
+
+[ ] Instant-book flow:
+    - Sirf eligible listing par.
+    - Dates, capacity, host rules aur payment clear hone ke baad atomic booking.
+    - Host cancellation/availability sync issues ke fallback rules.
+
+[ ] Booking state transitions define karein:
+    requested -> accepted/declined/expired
+    pending_payment -> confirmed -> checked_in -> completed
+    aur cancelled/refund_pending/refunded/disputed states.
+    Invalid transitions backend reject kare.
+
+[ ] Repeat submit, network retry, multiple browser tabs aur payment callbacks
+    ko idempotency key/deduplication se safe banayein.
+
+[ ] Guest booking management: request status, confirmation, itinerary,
+    cancellation eligibility, support and refund progress.
+
+
+7. Priority 1 - Payments, fees and host payouts
+----------------------------------------------
+
+[ ] Existing Razorpay booking payment flow ka full audit karein; payment ko
+    marketplace payment/payout flow samajhkar seedha reuse na karein.
+
+[ ] Chune hue region mein marketplace split payments/payouts support karne
+    wala provider select karein. Provider host KYC, connected accounts,
+    platform commission, delayed payouts, refunds and disputes support karta
+    hai ya nahi verify karein.
+
+[ ] Provider order/payment server par create kare; amount booking quote se ho.
+    Frontend ya URL callback ko payment proof na maanein.
+
+[ ] Webhook signature validate karein, raw-body requirements configure karein,
+    replay/duplicate events idempotently process karein aur payment ledger
+    state reconcile karein.
+
+[ ] Booking confirmation ko verified provider event/payment state se tie karein.
+    Payment fail/expire hone par hold release aur guest/host notification ho.
+
+[ ] Host payout policy implement karein: payout eligibility, delay, fees,
+    refund/dispute adjustment, failed payout retry and audit records.
+
+[ ] Refund/cancellation provider APIs se execute aur reconcile karein.
+    Mock/simulation mode production mein kabhi payment success mark na kare.
+
+[ ] Pricing breakdown checkout se pehle transparent dikhaye; taxes, host fees,
+    platform fees aur refunds ke rules local legal advice ke mutabik hon.
+
+
+8. Priority 1 - Messaging, reviews and trust/safety
+--------------------------------------------------
+
+[ ] Booking-linked guest-host conversation create karein. Participants hi
+    conversation dekh/send kar saken; private contact/location details
+    booking policy ke mutabik protect hon.
+
+[ ] Basic messaging MVP: text, sent/read time, pagination, notification,
+    rate limit, block/report and admin moderation. Realtime/WebSocket baad
+    mein scale requirement par add karein.
+
+[~] Reviews sirf eligible completed booking ke baad; ek booking par
+    duplicate review prevent karein. Host response aur report/moderation flow.
+    Existing hotel-suite reviews require a guest-owned checked-out booking and
+    are unique per booking; marketplace listing reviews and reporting remain.
+
+[ ] Listing/host/guest reporting, safety issue escalation, admin notes,
+    account restriction aur case status workflows add karein.
+
+[x] Review, rating aur badge ko fake/unverified data se distinguish karein.
+    Seeded sample reviews ko production customer reviews ki tarah na dikhayein.
+    Fake review content and rating claims were removed; public ratings use
+    verified completed-stay reviews only.
+
+[ ] Host identity/document verification vendor choose karne se pehle data
+    minimization, retention, access and local privacy regulations review karein.
+
+[ ] Terms, privacy, cancellation, refunds, host rules, prohibited listings,
+    dispute handling, taxes and marketplace responsibility ke legal pages
+    publish/review karayein.
+
+
+9. Priority 2 - Admin and marketplace operations
+-----------------------------------------------
+
+[ ] Admin console mein host onboarding/verification review, listing
+    moderation, reports, bookings, refunds, payouts, support cases aur audit logs.
+
+[ ] Support agent ko least-privilege access; sensitive documents/payment
+    credentials default UI/API responses mein expose na hon.
+
+[ ] Admin actions ke liye reason, actor, timestamp and before/after audit log.
+
+[ ] Booking calendar conflict resolution aur manual support override ke
+    guarded workflows.
+
+[ ] Operations reports: occupancy/bookings, cancellations, response time,
+    host payout reconciliation, refunds and disputed payments.
+
+[ ] Content management existing hotel FAQ/gallery tools ke saath coexist kare;
+    listing content ownership aur global site content alag rahe.
+
+
+10. Reliability, privacy, quality and launch
+--------------------------------------------
+
+[ ] Automated tests add karein:
+    - Unit: date range overlap, timezone, per-night pricing, fees and status rules.
+    - Integration: listing owner permissions, host approval, search,
+      booking request, instant book, payment/webhook, cancellation/refund.
+    - Concurrency: same listing/date par simultaneous booking; sirf valid
+      winner confirm ho.
+    - E2E: search -> listing -> dates -> quote -> request/payment ->
+      confirmation -> completed stay -> review.
+    - Security: IDOR, role escalation, price tampering, webhook replay,
+      invalid host/listing ownership and cross-customer booking access.
+
+[ ] Backend placeholder test command ko real test suite se replace karein;
+    frontend/backend build, lint, tests CI pipeline par chalayein.
+
+[ ] Input validation, output sanitization, query/page limits, upload scanning,
+    request size limits and consistent API errors implement karein.
+
+[ ] Auth/session protection review: secure production token/cookie strategy,
+    OTP/login throttling, admin MFA, CORS allowlist, rate limiting and secrets.
+
+[ ] Data privacy: guest/host personal data minimum rakhein, private listing
+    address aur verification documents protect karein, retention/deletion
+    requests support karein.
+
+[ ] Observability: structured logs, error monitoring, payment/webhook alerts,
+    email delivery status, database health, backups and restore drill.
+
+[ ] Separate development, staging and production config; production secrets
+    hosting secret manager/environment mein rakhein.
+
+[ ] README mein setup, ports, environment variables, tests, seed/migration,
+    payment sandbox, email and deployment instructions consistent karein.
+
+[ ] Staging par host aur guest test accounts ke saath full booking lifecycle
+    aur refund/payout sandbox verify karein, phir limited-region pilot launch.
+
+
+11. Ordered implementation steps and exit gates
+------------------------------------------------
+
+Step 0 - Confirm policy gates:
+    Use current baseline for work that can be safely built. Before payment,
+    tax, KYC, payout, cancellation or legal behavior ships, get owner decisions
+    for the open questions in Section 2. Exit: decisions recorded; no policy
+    or provider behavior is guessed.
+
+Step 1 - Stabilize the existing foundation (partially complete):
+    Keep Suite/hotel booking separate from StayListing until migration is
+    designed. Finish role/owner access checks, listing lifecycle controls,
+    address privacy and non-destructive import/seed strategy. Exit: owner
+    cannot modify another host's data; public APIs never expose exact address;
+    migration can be rehearsed without overwriting production data. Review
+    index changes require a reviewed migration from the legacy user/suite
+    unique index before application rollout.
+
+Step 2 - Finish host/listing MVP (partially complete):
+    Complete host onboarding states and listing editor, image upload,
+    accessibility/rules, publish/pause controls and moderation. Defer payout
+    and identity providers until approved. Exit: approved host can manage only
+    own listing; moderation is enforced server-side; public results exclude
+    non-published listings.
+
+Step 3 - Finish discovery before bookings (partially complete):
+    Add date/guest search, availability-aware results, listing detail, safe
+    approximate location and transparent server-generated quote. Choose a map
+    provider only after API key, privacy and cost review. Exit: the results
+    and details agree on eligibility, dates, address privacy and price.
+
+Step 4 - Build marketplace booking lifecycle:
+    Calendar blocks, server-side quotes, request-to-book and host decisions,
+    valid transitions, idempotency and concurrent-booking protection. Exit:
+    overlapping requests cannot double-confirm; retries do not duplicate
+    bookings; guest and host see only permitted bookings.
+
+Step 5 - Add payment and marketplace money operations:
+    Select a supported provider after geography and fee decisions; implement
+    verified webhook processing, ledger/reconciliation, refunds and payouts.
+    Exit: no client callback can mark paid; duplicate webhooks are harmless;
+    sandbox refund/payout reconciliation passes.
+
+Step 6 - Trust, support and verified marketplace reviews:
+    Booking-linked conversations, completed-booking reviews, reports,
+    moderation, support roles and audit events. Exit: only participants access
+    messages; each eligible booking can be reviewed once; all moderation and
+    admin actions have traceable actor/time/reason.
+
+Step 7 - Production readiness and pilot:
+    Complete automated unit/integration/concurrency/E2E/security tests,
+    privacy/legal review, backups/restore, monitoring, accessibility,
+    staging-provider validation and a limited-region rollout. Exit: all MVP
+    acceptance criteria and staging runbooks pass; a build alone is not enough.
+
+Later, measured need ke basis par: instant booking for more listings,
+multi-currency, localization, richer messaging, wishlists, dynamic pricing,
+calendar sync, loyalty and recommendations.
+
+
+12. MVP acceptance checklist
+----------------------------
+
+[~] Approved host listing create/edit/publish kar sake; doosre host ki
+    listing modify na kar sake.
+[~] Guest destination/dates/guest count se listings search kar sake.
+[ ] Search/listing details only actually bookable dates dikhayein.
+[x] Exact address privacy rule ke mutabik booking se pehle hidden rahe.
+[ ] Server guest capacity, nights, policies, fees and total price validate kare.
+[ ] Do guests same dates ek hi listing par race karke double-confirm na hon.
+[ ] Host request accept/decline kare; guest ko correct state/notification mile.
+[ ] Payment success sirf trusted provider verification/webhook se confirm ho.
+[ ] Cancellation/refund status booking, guest, host and ledger mein consistent ho.
+[ ] Guest sirf apni trip/conversation dekhe; host sirf apni listing bookings dekhe.
+[~] Review sirf eligible completed booking par create ho.
+[ ] Admin moderation/reporting and audit trail kaam kare.
+[~] Mobile/desktop, accessible forms, loading/error/empty states verified hon.
+[ ] Automated tests, production build, staging payment and recovery steps pass hon.
+
+
+Scope note
+----------
+Yeh roadmap current repository ke accommodation/hotel booking features ko
+starting point maan kar banaya gaya hai. Is file ko edit karne se complete
+marketplace nahi banta. Har step ko exit gate ke against test karke hi complete
+mark karein; database migration aur production rollout local build se verify
+nahi hote. Airbnb ke brand ya proprietary design ki copy karne ke bajay
+EQUALIRIO ka apna original product banayein.

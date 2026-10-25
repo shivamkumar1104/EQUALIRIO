@@ -26,7 +26,17 @@ const request = async (method, path, body = null, auth = false) => {
 
   if (body) config.body = JSON.stringify(body);
 
-  const res = await fetch(`${BASE_URL}${path}`, config);
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, config);
+  } catch (cause) {
+    if (cause instanceof TypeError) {
+      throw new Error(
+        `Could not reach the backend at ${API_BASE_URL}. Check that the backend is running and VITE_API_URL points to its valid URL.`
+      );
+    }
+    throw cause;
+  }
   const data = await res.json();
 
   if (!res.ok) {
@@ -42,6 +52,9 @@ const request = async (method, path, body = null, auth = false) => {
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export const authAPI = {
+  requestRegistrationOtp: (email) => request("POST", "/auth/register/request-otp", { email }),
+  verifyRegistrationOtp: (email, otp) =>
+    request("POST", "/auth/register/verify-otp", { email, otp }),
   register: (payload) => request("POST", "/auth/register", payload),
   login: (payload) => request("POST", "/auth/login", payload),
   googleLogin: (token) => request("POST", "/auth/google", { token }),
@@ -59,6 +72,41 @@ export const authAPI = {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   },
+};
+
+// ─── Stays Marketplace ────────────────────────────────────────────────────────
+
+export const staysAPI = {
+  search: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request("GET", `/stays${query ? `?${query}` : ""}`);
+  },
+  getByIdOrSlug: (idOrSlug) => request("GET", `/stays/${encodeURIComponent(idOrSlug)}`),
+};
+
+export const hostAPI = {
+  apply: (profile) => request("POST", "/hosts/apply", profile, true),
+  getMyProfile: () => request("GET", "/hosts/me", null, true),
+  getMyListings: () => request("GET", "/hosts/me/listings", null, true),
+  createListing: (listing) => request("POST", "/hosts/me/listings", listing, true),
+  updateListing: (id, listing) =>
+    request("PUT", `/hosts/me/listings/${encodeURIComponent(id)}`, listing, true),
+  submitListing: (id) =>
+    request("POST", `/hosts/me/listings/${encodeURIComponent(id)}/submit`, {}, true),
+  pauseListing: (id) =>
+    request("POST", `/hosts/me/listings/${encodeURIComponent(id)}/pause`, {}, true),
+  getApplicationQueue: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request("GET", `/hosts/admin/applications${query ? `?${query}` : ""}`, null, true);
+  },
+  getListingReviewQueue: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request("GET", `/hosts/admin/listings/review${query ? `?${query}` : ""}`, null, true);
+  },
+  reviewApplication: (id, decision) =>
+    request("PATCH", `/hosts/admin/applications/${encodeURIComponent(id)}`, decision, true),
+  reviewListing: (id, decision) =>
+    request("PATCH", `/hosts/admin/listings/${encodeURIComponent(id)}/review`, decision, true),
 };
 
 // ─── Suites ───────────────────────────────────────────────────────────────────

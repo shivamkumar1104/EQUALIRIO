@@ -12,13 +12,14 @@
 - 📅 **Multi-Step Booking Flow** (4-step: Suite → Add-ons → Guest Info → Confirmation)
 - 🔐 **Authentication** — Email/password + Google OAuth + JWT
 - 👤 **Role-Based Access** — Guest and Admin roles
-- ⭐ **Reviews System** with verified stays and rating aggregation
+- ⭐ **Verified Guest Reviews** — only guests with completed bookings can submit reviews; ratings are calculated from real reviews
 - 🍽 **Dining Reservations** with time-slot capacity management
 - 🌍 **Multi-language** support (Google Translate integration)
 - 💱 **Multi-currency** display
 - 📱 **Fully Responsive** — mobile-first design
 - 🧾 **Admin CRM** — searchable, paginated guest records with booking and membership context
 - 🔎 **SEO Basics** — search/social metadata and crawler access rules
+- 🏡 **Stays Marketplace Foundation** — host dashboard, moderated listings, and public stay discovery
 
 ---
 
@@ -68,7 +69,10 @@ cp .env.example .env
 # Frontend
 cd frontend
 cp .env.example .env
-# Edit .env with your API URL and Google Client ID
+# Set VITE_API_URL=http://localhost:5000 for local development.
+# For deployment, use the complete public backend origin, e.g. https://your-api.onrender.com
+# Do not append /api; the frontend adds that path automatically.
+# Add the Google Client ID as VITE_GOOGLE_CLIENT_ID.
 ```
 
 ### Google Sign-In Setup
@@ -86,20 +90,24 @@ cp .env.example .env
 
 This app uses Google Identity Services to return an ID token; an OAuth client secret is not needed for this sign-in flow. Do not put a client secret in the frontend. The Google button appears when the frontend client ID is configured.
 
-### Email Registration Verification (Brevo)
+### Email Registration OTP (Brevo)
 
 1. In Brevo, create and verify a sender email address.
 2. In `backend/.env`, set `BREVO_API_KEY` and `BREVO_SENDER_EMAIL` to your Brevo API key and verified sender address. Optionally set `BREVO_SENDER_NAME`.
-3. Ensure `FRONTEND_URL=http://localhost:3000` for local verification links; use your deployed frontend origin in production.
-4. Restart the backend. New email/password registrations receive a verification link; they cannot sign in until they verify. Google sign-in continues to trust Google's verified email.
+3. Restart the backend. Email/password registration first sends a 6-digit code that expires in 10 minutes. The user must verify the code before the name and password fields unlock and the account can be created. Google sign-in continues to trust Google's verified email.
+4. `FRONTEND_URL` is still used by verification links for accounts created before OTP registration was enabled; set it to the deployed frontend origin in production.
 
 Keep Brevo's API key only in the backend environment; never add it to a `VITE_` variable or frontend code.
 
-### 3. Seed the Database
+### 3. Seed a Disposable Development Database
+
+The seed script deletes and replaces hotel, suite, amenity, FAQ, and gallery
+records. It refuses to run in production and requires explicit opt-in. Never
+point it at production or a database containing data you need to keep.
 
 ```bash
 cd backend
-npm run seed
+SEED_ALLOW_DESTRUCTIVE=true npm run seed
 ```
 
 ### 4. Start Development Servers
@@ -159,6 +167,10 @@ Open [http://localhost:3000](http://localhost:3000) 🎉
 | DELETE | `/api/reviews/:id` | Protected (owner/admin) |
 | POST | `/api/reviews/:id/respond` | Admin |
 
+Reviews are not seeded or supplied with sample/fallback text. Public review feeds
+and rating totals include only reviews attached to a guest's checked-out booking.
+A review with no completed booking is rejected by the API.
+
 ### Dining
 | Method | Endpoint | Access |
 |---|---|---|
@@ -167,6 +179,28 @@ Open [http://localhost:3000](http://localhost:3000) 🎉
 | PATCH | `/api/dining/:id/cancel` | Protected |
 | GET | `/api/dining` | Admin |
 | PATCH | `/api/dining/:id/status` | Admin |
+
+### Stays Marketplace
+| Method | Endpoint | Access |
+|---|---|---|
+| GET | `/api/stays` | Public (published stays only) |
+| GET | `/api/stays/:idOrSlug` | Public (published stays only) |
+| POST | `/api/hosts/apply` | Authenticated |
+| GET | `/api/hosts/me` | Authenticated |
+| GET | `/api/hosts/me/listings` | Authenticated host |
+| POST | `/api/hosts/me/listings` | Approved host |
+| PUT | `/api/hosts/me/listings/:id` | Listing owner |
+| POST | `/api/hosts/me/listings/:id/submit` | Approved host |
+| POST | `/api/hosts/me/listings/:id/pause` | Approved listing owner |
+| GET | `/api/hosts/admin/applications` | Admin |
+| GET | `/api/hosts/admin/listings/review` | Admin |
+| PATCH | `/api/hosts/admin/applications/:id` | Admin |
+| PATCH | `/api/hosts/admin/listings/:id/review` | Admin |
+
+Host applications and listings are moderated. Only published listings owned
+by approved hosts appear in public stay search. Booking calendars, marketplace
+payment/payouts, messaging, and reviews for marketplace listings remain follow-up
+work and are not implied by these catalog endpoints.
 
 ---
 

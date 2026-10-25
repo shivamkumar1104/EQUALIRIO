@@ -20,8 +20,11 @@ import AuthModal from './components/AuthModal';
 import MyBookingsModal from './components/MyBookingsModal';
 import AdminDashboardModal from './components/AdminDashboardModal';
 import SpaBookingModal from './components/SpaBookingModal';
+import HostDashboardModal from './components/HostDashboardModal';
+import MarketplaceReviewModal from './components/MarketplaceReviewModal';
+import StaysMarketplace from './components/StaysMarketplace';
 
-import { REVIEWS_DATA, HOTEL_INFO } from './data/hotelData';
+import { HOTEL_INFO } from './data/hotelData';
 import { reviewsAPI, hotelAPI, authAPI } from './services/api';
 
 export default function App() {
@@ -54,7 +57,10 @@ export default function App() {
 
   // Review Modal State
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [reviewsList, setReviewsList] = useState(REVIEWS_DATA);
+  const [reviewsList, setReviewsList] = useState([]);
+  const [reviewStats, setReviewStats] = useState({ average: null, count: 0 });
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState('');
 
   // Live Fetch on mount
   useEffect(() => {
@@ -62,13 +68,20 @@ export default function App() {
     reviewsAPI.getAll({ limit: 12 })
       .then((res) => {
         if (!isMounted) return;
-        const fetched = res.data?.reviews;
-        if (Array.isArray(fetched) && fetched.length > 0) {
+        const fetched = res.reviews ?? res.data?.reviews;
+        if (Array.isArray(fetched)) {
           setReviewsList(fetched);
+          setReviewStats(res.stats || res.data?.stats || { average: null, count: 0 });
+        } else {
+          setReviewsError('Reviews could not be loaded. Please try again later.');
         }
       })
       .catch((err) => {
-        console.warn('Live reviews fetch fallback:', err.message);
+        console.error('Reviews could not be loaded:', err);
+        if (isMounted) setReviewsError('Reviews could not be loaded. Please try again later.');
+      })
+      .finally(() => {
+        if (isMounted) setReviewsLoading(false);
       });
 
     hotelAPI.getInfo()
@@ -85,8 +98,6 @@ export default function App() {
             address: fetched.address || prev.address,
             phone: fetched.contact?.phone || prev.phone,
             email: fetched.contact?.email || prev.email,
-            rating: fetched.stats?.rating || prev.rating,
-            reviewCount: fetched.stats?.reviewCount || prev.reviewCount,
           }));
         }
       })
@@ -122,6 +133,8 @@ export default function App() {
 
   // Admin Management Portal State
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isHostDashboardOpen, setIsHostDashboardOpen] = useState(false);
+  const [isMarketplaceReviewOpen, setIsMarketplaceReviewOpen] = useState(false);
 
   // Spa & Sanctuary Wellness Booking State
   const [isSpaModalOpen, setIsSpaModalOpen] = useState(false);
@@ -142,9 +155,32 @@ export default function App() {
     setIsTableModalOpen(true);
   };
 
-  const handleAddReview = (newReview) => {
-    setReviewsList([newReview, ...reviewsList]);
-    setToastMessage("Thank you! Your guest review has been posted.");
+  const handleReviewSubmitted = async () => {
+    try {
+      const response = await reviewsAPI.getAll({ limit: 12 });
+      const fetched = response.reviews ?? response.data?.reviews;
+      if (Array.isArray(fetched)) {
+        setReviewsList(fetched);
+        setReviewStats(response.stats || response.data?.stats || { average: null, count: 0 });
+        setReviewsError('');
+      } else {
+        setReviewsError('Reviews could not be loaded. Please reload the page to try again.');
+      }
+      setToastMessage("Thank you. Your verified-stay review has been submitted.");
+    } catch (error) {
+      console.error('Review submitted but review list could not be refreshed:', error);
+      setReviewsError('Reviews could not be loaded. Please reload the page to try again.');
+      setToastMessage("Your review was submitted, but the list could not refresh. Reload the page to check its status.");
+    }
+  };
+
+  const handleOpenReview = () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      setToastMessage("Sign in to review a stay you have completed.");
+      return;
+    }
+    setIsReviewModalOpen(true);
   };
 
   const handleExperienceInquiry = (experienceTitle) => {
@@ -154,6 +190,15 @@ export default function App() {
   const handleAuthSuccess = (loggedInUser) => {
     setUser(loggedInUser);
     setToastMessage(`Welcome, ${loggedInUser.name || 'Guest'}!`);
+  };
+
+  const handleOpenHostDashboard = () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      setToastMessage('Sign in or create an account to apply as a host.');
+      return;
+    }
+    setIsHostDashboardOpen(true);
   };
 
   const handleLogout = () => {
@@ -176,6 +221,7 @@ export default function App() {
         onLogout={handleLogout}
         onOpenMyBookings={() => setIsMyBookingsOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenHost={handleOpenHostDashboard}
       />
 
       {/* Main Content Sections */}
@@ -183,8 +229,12 @@ export default function App() {
         {/* Hero Banner with Quick Search */}
         <Hero
           hotelInfo={hotelInfo}
+          reviewStats={reviewStats}
           onSearchBooking={(searchData) => handleOpenBooking(searchData)}
         />
+
+        {/* Independently hosted stays marketplace */}
+        <StaysMarketplace />
 
         {/* About Equalirio Philosophy & Stats */}
         <About />
@@ -213,7 +263,10 @@ export default function App() {
         {/* Guest Reviews & Testimonials */}
         <Reviews
           reviewsList={reviewsList}
-          onWriteReview={() => setIsReviewModalOpen(true)}
+          reviewStats={reviewStats}
+          isLoading={reviewsLoading}
+          loadError={reviewsError}
+          onWriteReview={handleOpenReview}
         />
 
         {/* Accordion FAQs & Concierge Inquiry Box */}
@@ -262,7 +315,7 @@ export default function App() {
       <ReviewModal
         isOpen={isReviewModalOpen}
         onClose={() => setIsReviewModalOpen(false)}
-        onAddReview={handleAddReview}
+        onReviewSubmitted={handleReviewSubmitted}
       />
 
       {/* 5. Toast Notification System */}
@@ -293,6 +346,20 @@ export default function App() {
         onClose={() => setIsAdminOpen(false)}
         user={user}
         currency={currency}
+        onOpenMarketplaceReview={() => {
+          setIsAdminOpen(false);
+          setIsMarketplaceReviewOpen(true);
+        }}
+      />
+
+      <HostDashboardModal
+        isOpen={isHostDashboardOpen}
+        onClose={() => setIsHostDashboardOpen(false)}
+      />
+
+      <MarketplaceReviewModal
+        isOpen={isMarketplaceReviewOpen}
+        onClose={() => setIsMarketplaceReviewOpen(false)}
       />
 
       {/* 9. Aurelia Sanctuary Spa & Wellness Booking Modal */}

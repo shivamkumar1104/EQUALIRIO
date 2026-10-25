@@ -14,6 +14,8 @@ import paymentRoutes from "./routes/payment.routes.js";
 import hotelRoutes from "./routes/hotel.routes.js";
 import contentRoutes from "./routes/content.routes.js";
 import membershipRoutes from "./routes/membership.routes.js";
+import hostRoutes from "./routes/host.routes.js";
+import stayRoutes from "./routes/stay.routes.js";
 
 // Middlewares
 import { apiLimiter } from "./middlewares/rateLimit.middleware.js";
@@ -95,6 +97,8 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/hotel", hotelRoutes);
 app.use("/api/content", contentRoutes);
 app.use("/api/membership", membershipRoutes);
+app.use("/api/hosts", hostRoutes);
+app.use("/api/stays", stayRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

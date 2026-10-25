@@ -39,7 +39,7 @@ const resources = {
         suiteType: "Suite Category",
         allCategories: "All Suites & Villas",
         searchRooms: "Check Availability",
-        ratingText: "Rated 4.98/5 by 340+ Verified High-Net-Worth Travelers",
+        ratingText: "Guest ratings are based on completed stays",
         guarantee: "Best Rate Guarantee • Instant Confirmation • 24/7 Butler Service",
       },
       about: {
@@ -98,8 +98,6 @@ const resources = {
         title: "Cherished Reflections from Discerning Travelers",
         writeReview: "Write Guest Review",
         verified: "Verified Stay",
-        overallScore: "4.98 / 5.0",
-        basedOn: "Based on 340+ verified stays",
       },
       faqs: {
         subtitle: "Everything You Need to Know",
@@ -149,7 +147,7 @@ const resources = {
         suiteType: "सुइट का प्रकार",
         allCategories: "सभी सुइट्स और विला",
         searchRooms: "उपलब्धता जांचें",
-        ratingText: "340+ सत्यापित अतिथियों द्वारा 4.98/5 रेटिंग प्राप्त",
+        ratingText: "अतिथि रेटिंग पूर्ण प्रवास के बाद दी जाती हैं",
         guarantee: "सर्वोत्तम दर की गारंटी • तत्काल पुष्टि • 24/7 बटलर सेवा",
       },
       about: {
@@ -208,8 +206,6 @@ const resources = {
         title: "सम्मानित मेहमानों के आत्मीय विचार",
         writeReview: "समीक्षा लिखें",
         verified: "सत्यापित प्रवास",
-        overallScore: "4.98 / 5.0",
-        basedOn: "340+ सत्यापित अनुभवों पर आधारित",
       },
       faqs: {
         subtitle: "आवश्यक जानकारी",
@@ -259,7 +255,7 @@ const resources = {
         suiteType: "Categoría de Suite",
         allCategories: "Todas las Suites y Villas",
         searchRooms: "Verificar Disponibilidad",
-        ratingText: "Calificado con 4.98/5 por más de 340 viajeros verificados",
+        ratingText: "Las calificaciones se basan en estancias completadas",
         guarantee: "Mejor Tarifa Garantizada • Confirmación Inmediata • Mayordomo 24/7",
       },
       about: {
@@ -318,8 +314,6 @@ const resources = {
         title: "Reflexiones de Viajeros Exigentes",
         writeReview: "Escribir Reseña",
         verified: "Estancia Verificada",
-        overallScore: "4.98 / 5.0",
-        basedOn: "Basado en más de 340 estancias verificadas",
       },
       faqs: {
         subtitle: "Todo lo que Necesita Saber",
@@ -369,7 +363,7 @@ const resources = {
         suiteType: "Type de Suite",
         allCategories: "Toutes les Suites et Villas",
         searchRooms: "Vérifier Disponibilité",
-        ratingText: "Noté 4,98/5 par plus de 340 voyageurs vérifiés",
+        ratingText: "Les notes sont basées sur des séjours terminés",
         guarantee: "Meilleur Tarif Garanti • Confirmation Immédiate • Majordome 24/7",
       },
       about: {
@@ -428,8 +422,6 @@ const resources = {
         title: "Impressions de Voyageurs Exigeants",
         writeReview: "Écrire un Avis",
         verified: "Séjour Vérifié",
-        overallScore: "4.98 / 5.0",
-        basedOn: "Basé sur plus de 340 séjours vérifiés",
       },
       faqs: {
         subtitle: "Tout Ce Que Vous Devez Savoir",
@@ -479,7 +471,7 @@ const resources = {
         suiteType: "Suite-Kategorie",
         allCategories: "Alle Suiten & Villen",
         searchRooms: "Verfügbarkeit Prüfen",
-        ratingText: "Mit 4,98/5 von über 340 verifizierten Gästen bewertet",
+        ratingText: "Bewertungen basieren auf abgeschlossenen Aufenthalten",
         guarantee: "Bestpreisgarantie • Sofortige Bestätigung • 24/7 Butlerservice",
       },
       about: {
@@ -538,8 +530,6 @@ const resources = {
         title: "Erfahrungen unserer geschätzten Gäste",
         writeReview: "Bewertung Schreiben",
         verified: "Verifizierter Aufenthalt",
-        overallScore: "4.98 / 5.0",
-        basedOn: "Basierend auf über 340 verifizierten Aufenthalten",
       },
       faqs: {
         subtitle: "Alles, was Sie wissen müssen",

@@ -15,6 +15,7 @@ const reviewSchema = new mongoose.Schema(
     booking: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
+      required: [true, "Review must be linked to a completed booking"],
     },
     // Rating breakdown
     ratings: {
@@ -65,7 +66,13 @@ const reviewSchema = new mongoose.Schema(
     },
     isVerifiedStay: {
       type: Boolean,
-      default: false, // True if linked to a completed booking
+      default: false,
+      validate: {
+        validator(value) {
+          return value === true && Boolean(this.booking);
+        },
+        message: "Only a verified completed stay can be reviewed",
+      },
     },
     helpfulVotes: {
       type: Number,
@@ -79,15 +86,15 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
-// One verified review per user per suite (for verified stays)
-reviewSchema.index({ user: 1, suite: 1 }, { unique: true, sparse: true });
+// A guest can review each completed booking once, including repeat stays at a suite.
+reviewSchema.index({ booking: 1 }, { unique: true, sparse: true });
 reviewSchema.index({ suite: 1, status: 1, createdAt: -1 });
 reviewSchema.index({ user: 1, createdAt: -1 });
 
 // Static method to recalculate suite average rating after review save
 reviewSchema.statics.calcAverageRatings = async function (suiteId) {
   const stats = await this.aggregate([
-    { $match: { suite: suiteId, status: "approved" } },
+    { $match: { suite: suiteId, status: "approved", isVerifiedStay: true, booking: { $exists: true } } },
     {
       $group: {
         _id: "$suite",
@@ -97,13 +104,11 @@ reviewSchema.statics.calcAverageRatings = async function (suiteId) {
     },
   ]);
 
-  if (stats.length > 0) {
-    const Suite = mongoose.model("Suite");
-    await Suite.findByIdAndUpdate(suiteId, {
-      averageRating: Math.round(stats[0].avgRating * 10) / 10,
-      totalReviews: stats[0].nRating,
-    });
-  }
+  const Suite = mongoose.model("Suite");
+  await Suite.findByIdAndUpdate(suiteId, {
+    averageRating: stats.length ? Math.round(stats[0].avgRating * 10) / 10 : 0,
+    totalReviews: stats[0]?.nRating || 0,
+  });
 };
 
 // Recalculate ratings after save

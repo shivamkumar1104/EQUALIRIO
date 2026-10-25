@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Mail, Lock, User, LogIn, UserPlus, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
+import { authAPI } from '../services/api';
 
 const API_BASE = `${API_BASE_URL}/api`;
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
 
 export default function AuthModal({ isOpen, onClose, onSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
+  const [registrationStep, setRegistrationStep] = useState('email');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [registrationToken, setRegistrationToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState('');
@@ -134,37 +138,43 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
     setSuccessMsg('');
     setLoading(true);
 
-    const endpoint = isLogin
-      ? `${API_BASE}/auth/login`
-      : `${API_BASE}/auth/register`;
-
-    const payload = isLogin
-      ? { email: email.trim(), password }
-      : { name: name.trim(), email: email.trim(), password };
-
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
+      let data;
+      if (isLogin) {
+        data = await authAPI.login({ email: email.trim(), password });
+      } else if (registrationStep === 'email') {
+        data = await authAPI.requestRegistrationOtp(email.trim());
+        if (!data.success) throw new Error(data.message || 'Could not send verification code');
+        setRegistrationStep('otp');
+        setSuccessMsg(data.message);
+        return;
+      } else if (registrationStep === 'otp') {
+        data = await authAPI.verifyRegistrationOtp(email.trim(), otp);
+        if (!data.success || !data.registrationToken) {
+          throw new Error(data.message || 'Could not verify the code');
+        }
+        setRegistrationToken(data.registrationToken);
+        setRegistrationStep('details');
+        setOtp('');
+        setSuccessMsg(data.message);
+        return;
+      } else {
+        data = await authAPI.register({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        registrationToken,
+        });
+      }
 
       if (data.verificationRequired) {
         setVerificationPending(true);
-        if (response.ok) {
-          setSuccessMsg(data.message);
-          setPassword('');
-        } else {
-          setErrorMsg(data.message);
-        }
+        setSuccessMsg(data.message);
+        setPassword('');
         return;
       }
 
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.message || 'Authentication failed');
       }
 
@@ -192,18 +202,31 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
     setResendingVerification(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/resend-verification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) {
+      const data = await authAPI.resendVerification(email.trim());
+      if (!data.success) {
         throw new Error(data.message || 'Could not resend verification email');
       }
       setSuccessMsg(data.message);
     } catch (err) {
       setErrorMsg(err.message || 'Could not resend verification email');
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
+  const handleResendRegistrationOtp = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    setResendingVerification(true);
+
+    try {
+      const data = await authAPI.requestRegistrationOtp(email.trim());
+      if (!data.success) {
+        throw new Error(data.message || 'Could not resend verification code');
+      }
+      setSuccessMsg(data.message);
+    } catch (err) {
+      setErrorMsg(err.message || 'Could not resend verification code');
     } finally {
       setResendingVerification(false);
     }
@@ -242,6 +265,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
                 setErrorMsg('');
                 setSuccessMsg('');
                 setVerificationPending(false);
+                setRegistrationStep('email');
+                setRegistrationToken('');
+                setOtp('');
               }}
               className={`py-2 text-xs font-semibold tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                 isLogin
@@ -260,6 +286,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
                 setErrorMsg('');
                 setSuccessMsg('');
                 setVerificationPending(false);
+                setRegistrationStep('email');
+                setRegistrationToken('');
+                setOtp('');
               }}
               className={`py-2 text-xs font-semibold tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                 !isLogin
@@ -307,7 +336,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Register: Name Input */}
-            {!isLogin && (
+            {!isLogin && registrationStep === 'details' && (
               <div>
                 <label className="block text-[11px] font-serif uppercase tracking-wider text-hotel-gold mb-1">
                   Full Name
@@ -338,14 +367,35 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  readOnly={!isLogin && registrationStep !== 'email'}
                   placeholder="guest@equalirio.com"
-                  className="w-full bg-black/40 border border-white/15 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold transition-colors"
+                  className="w-full bg-black/40 border border-white/15 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold transition-colors read-only:opacity-70"
                 />
               </div>
             </div>
 
+            {!isLogin && registrationStep === 'otp' && (
+              <div>
+                <label className="block text-[11px] font-serif uppercase tracking-wider text-hotel-gold mb-1">
+                  6-Digit Email Code
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  required
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter the code from your email"
+                  className="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-2.5 text-sm tracking-[0.3em] text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold transition-colors"
+                />
+              </div>
+            )}
+
             {/* Password Input */}
-            <div>
+            {(isLogin || registrationStep === 'details') && <div>
               <label className="block text-[11px] font-serif uppercase tracking-wider text-hotel-gold mb-1 flex items-center justify-between">
                 <span>Password</span>
                 {!isLogin && (
@@ -363,7 +413,11 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
                   className="w-full bg-black/40 border border-white/15 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold transition-colors"
                 />
               </div>
-            </div>
+            </div>}
+
+            {!isLogin && registrationStep === 'details' && (
+              <p className="text-xs text-emerald-200">Email verified. Complete your details to create your account.</p>
+            )}
 
             {/* Alerts */}
             {errorMsg && (
@@ -391,18 +445,53 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
               </button>
             )}
 
+            {!isLogin && registrationStep === 'otp' && (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={handleResendRegistrationOtp}
+                  disabled={resendingVerification || !email.trim()}
+                  className="w-full text-xs text-hotel-gold underline underline-offset-4 disabled:opacity-50"
+                >
+                  {resendingVerification ? 'Sending code...' : 'Resend code'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegistrationStep('email');
+                    setOtp('');
+                    setErrorMsg('');
+                    setSuccessMsg('');
+                  }}
+                  className="w-full text-xs text-gray-300 underline underline-offset-4"
+                >
+                  Change email address
+                </button>
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || googleLoading}
               className="flex items-center justify-center w-full gap-2 py-3 mt-2 text-xs font-bold tracking-widest uppercase transition-all rounded-xl bg-gradient-to-r from-hotel-gold to-hotel-gold-dark hover:from-hotel-gold-light hover:to-hotel-gold text-hotel-emerald-dark shadow-gold hover:shadow-lg disabled:opacity-50"
             >
               {loading ? (
-                <span>Authenticating...</span>
+                <span>{!isLogin && registrationStep === 'email' ? 'Sending code...' : !isLogin && registrationStep === 'otp' ? 'Verifying code...' : !isLogin ? 'Creating account...' : 'Authenticating...'}</span>
               ) : isLogin ? (
                 <>
                   <LogIn className="w-4 h-4" />
                   <span>Sign In to Equalirio</span>
+                </>
+              ) : registrationStep === 'email' ? (
+                <>
+                  <Mail className="w-4 h-4" />
+                  <span>Send verification code</span>
+                </>
+              ) : registrationStep === 'otp' ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Verify email</span>
                 </>
               ) : (
                 <>

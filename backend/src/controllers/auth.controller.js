@@ -1,22 +1,142 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import Booking from "../models/Booking.js";
 import Membership from "../models/Membership.js";
 import User from "../models/User.js";
+import RegistrationVerification from "../models/RegistrationVerification.js";
 import generateToken from "../utils/generateToken.js";
-import { sendVerificationEmail } from "../services/email.service.js";
+import { sendRegistrationOtpEmail, sendVerificationEmail } from "../services/email.service.js";
 
-export const registerUser = async (req, res) => {
+const hashRegistrationOtp = (otp) =>
+  createHmac("sha256", process.env.JWT_SECRET).update(otp).digest("hex");
+
+const isValidEmail = (email) =>
+  typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+export const requestRegistrationOtp = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ success: false, message: "Enter a valid email address." });
+    }
 
-    if (!name?.trim() || !email?.trim() || !password) {
-      return res.status(400).json({
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({
         success: false,
-        message: "Name, email and password are required",
+        message: existingUser.emailVerified
+          ? "An account already exists for this email. Please sign in."
+          : "This email already has an account awaiting verification. Sign in to request a verification email.",
       });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const otp = String(randomInt(100000, 1000000));
+    const verification = await RegistrationVerification.findOneAndUpdate(
+      { email },
+      {
+        $set: {
+          otpHash: hashRegistrationOtp(otp),
+          expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+          attempts: 0,
+        },
+        $unset: {
+          registrationTokenHash: 1,
+          registrationTokenExpiresAt: 1,
+        },
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    try {
+      await sendRegistrationOtpEmail(email, otp);
+    } catch (emailError) {
+      await RegistrationVerification.deleteOne({ _id: verification._id });
+      console.error("Registration OTP email failed:", emailError.message);
+      return res.status(503).json({
+        success: false,
+        message: "We could not send the verification code. Please try again later.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "A verification code has been sent to your email. It expires in 10 minutes.",
+    });
+  } catch (error) {
+    console.error("Request registration OTP error:", error);
+    return res.status(500).json({ success: false, message: "Could not start registration. Please try again." });
+  }
+};
+
+export const verifyRegistrationOtp = async (req, res) => {
+  try {
+    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    const otp = typeof req.body.otp === "string" ? req.body.otp.trim() : "";
+
+    if (!isValidEmail(email) || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ success: false, message: "Enter a valid email address and 6-digit code." });
+    }
+
+    const verification = await RegistrationVerification.findOne({ email });
+    if (!verification || verification.expiresAt <= new Date()) {
+      return res.status(400).json({ success: false, message: "The code is invalid or expired. Request a new code." });
+    }
+    if (verification.attempts >= 5) {
+      return res.status(429).json({ success: false, message: "Too many incorrect codes. Request a new code." });
+    }
+
+    const submittedHash = Buffer.from(hashRegistrationOtp(otp), "hex");
+    const expectedHash = Buffer.from(verification.otpHash, "hex");
+    if (!timingSafeEqual(submittedHash, expectedHash)) {
+      verification.attempts += 1;
+      await verification.save();
+      return res.status(400).json({
+        success: false,
+        message: verification.attempts >= 5
+          ? "Too many incorrect codes. Request a new code."
+          : "That code is incorrect. Please check your email and try again.",
+      });
+    }
+
+    const registrationToken = randomBytes(32).toString("hex");
+    verification.registrationTokenHash = hashVerificationToken(registrationToken);
+    verification.registrationTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    verification.otpHash = hashRegistrationOtp(randomBytes(32).toString("hex"));
+    verification.expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await verification.save();
+
+    return res.status(200).json({
+      success: true,
+      registrationToken,
+      message: "Email verified. You can now complete your account details.",
+    });
+  } catch (error) {
+    console.error("Verify registration OTP error:", error);
+    return res.status(500).json({ success: false, message: "Could not verify the code. Please try again." });
+  }
+};
+
+export const registerUser = async (req, res) => {
+  try {
+    const { name, email, password, registrationToken } = req.body;
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedName = typeof name === "string" ? name.trim() : "";
+
+    if (!normalizedName || !normalizedEmail || typeof password !== "string" || !password || typeof registrationToken !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Verify your email before entering your account details.",
+      });
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: "Enter a valid email address." });
+    }
+    if (normalizedName.length < 2 || normalizedName.length > 60) {
+      return res.status(400).json({ success: false, message: "Name must be between 2 and 60 characters." });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, message: "Password must be at least 8 characters long." });
+    }
 
     // Check existing user
     const existingUser = await User.findOne({ email: normalizedEmail });
@@ -30,31 +150,32 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const verificationToken = randomBytes(32).toString("hex");
-    const user = await User.create({
-      name: name.trim(),
+    const registrationVerification = await RegistrationVerification.findOne({
       email: normalizedEmail,
-      password,
-      emailVerified: false,
-      emailVerificationTokenHash: hashVerificationToken(verificationToken),
-      emailVerificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      registrationTokenHash: hashVerificationToken(registrationToken),
+      registrationTokenExpiresAt: { $gt: new Date() },
     });
-
-    try {
-      await sendVerificationEmail(user.email, user.name, verificationToken);
-    } catch (emailError) {
-      console.error("Registration verification email failed:", emailError.message);
-      return res.status(503).json({
+    if (!registrationVerification) {
+      return res.status(403).json({
         success: false,
-        verificationRequired: true,
-        message: "Your account was created, but the verification email could not be sent. Check the Brevo sender setup and request a new email.",
+        message: "Email verification is required or has expired. Please verify your email again.",
       });
     }
 
-    res.status(201).json({
+    const user = await User.create({
+      name: normalizedName,
+      email: normalizedEmail,
+      password,
+      emailVerified: true,
+    });
+
+    await RegistrationVerification.deleteOne({ _id: registrationVerification._id });
+
+    return res.status(201).json({
       success: true,
-      verificationRequired: true,
-      message: "Account created. Check your email for a verification link before signing in.",
+      message: "Your email is verified and your account has been created.",
+      token: generateToken(user._id, user.role),
+      user,
     });
   } catch (error) {
     console.error("Register Error:", error);

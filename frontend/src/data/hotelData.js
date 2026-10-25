@@ -3,8 +3,6 @@ export const HOTEL_INFO = {
   tagline: "Where Nature Meets Modern Equilibrium",
   subheading: "An exclusive luxury eco-sanctuary nestled where lush emerald rainforest meets crystal waters.",
   location: "Rio Sanctuary Bay, Private Coastline",
-  rating: 4.98,
-  reviewCount: 342,
   phone: "",
   email: "concierge@equalirio-resort.com",
   address: "100 Serenity Boulevard, Rio Bay, Paradise Coast"
@@ -204,39 +202,6 @@ export const GALLERY_DATA = [
     title: "Lush Eco Rainforest Paths",
     category: "Architecture",
     image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1000&q=80"
-  }
-];
-
-export const REVIEWS_DATA = [
-  {
-    id: "r1",
-    author: "Elena Rostova",
-    role: "Architectural Digest Reviewer",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-    rating: 5,
-    date: "August 2026",
-    title: "An Oasis of Pure Serenity",
-    content: "Equalirio redefined luxury for me. The seamless integration of eco-sustainable architecture with 6-star service and dining is unparalleled anywhere in the world."
-  },
-  {
-    id: "r2",
-    author: "Dr. Marcus Vance",
-    role: "Verified Guest — Royal Penthouse",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-    rating: 5,
-    date: "July 2026",
-    title: "Unrivaled Butler Service & Views",
-    content: "Our butler Carlos anticipated every single need before we even voiced it. Sunset over the ocean from our private infinity pool was a memory we will treasure forever."
-  },
-  {
-    id: "r3",
-    author: "Sophia & Julian Sterling",
-    role: "Honeymooners",
-    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80",
-    rating: 5,
-    date: "June 2026",
-    title: "Magical Honeymoon Experience",
-    content: "From the helicopter transfer to the private floating candlelit dinner, Equalirio created the most romantic experience of our lives."
   }
 ];
 

@@ -13,7 +13,7 @@ export const getSuiteReviews = async (req, res) => {
     const { page = 1, limit = 10, sort = "-createdAt" } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
 
-    const filter = { suite: req.params.suiteId, status: "approved" };
+    const filter = { suite: req.params.suiteId, status: "approved", isVerifiedStay: true, booking: { $exists: true } };
     const total = await Review.countDocuments(filter);
 
     const reviews = await Review.find(filter)
@@ -25,7 +25,7 @@ export const getSuiteReviews = async (req, res) => {
 
     // Aggregate rating breakdown
     const ratingStats = await Review.aggregate([
-      { $match: { suite: new mongoose.Types.ObjectId(req.params.suiteId), status: "approved" } },
+      { $match: { ...filter, suite: new mongoose.Types.ObjectId(req.params.suiteId) } },
       {
         $group: {
           _id: null,
@@ -35,6 +35,7 @@ export const getSuiteReviews = async (req, res) => {
           avgLocation: { $avg: "$ratings.location" },
           avgValue: { $avg: "$ratings.value" },
           avgAmenities: { $avg: "$ratings.amenities" },
+          count: { $sum: 1 },
           distribution: { $push: "$ratings.overall" },
         },
       },
@@ -60,7 +61,7 @@ export const getAllReviews = async (req, res) => {
   try {
     const { page = 1, limit = 6, sort = "-createdAt" } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
-    const filter = { status: "approved" };
+    const filter = { status: "approved", isVerifiedStay: true, booking: { $exists: true } };
     const total = await Review.countDocuments(filter);
 
     const reviews = await Review.find(filter)
@@ -70,8 +71,20 @@ export const getAllReviews = async (req, res) => {
       .skip(skip)
       .limit(Number(limit));
 
+    const ratingStats = await Review.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: null,
+          average: { $avg: "$ratings.overall" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
     return sendSuccess(res, 200, "Reviews retrieved", {
       reviews,
+      stats: ratingStats[0] ? { average: ratingStats[0].average, count: ratingStats[0].count } : { average: null, count: 0 },
       pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) },
     });
   } catch (error) {
@@ -89,34 +102,39 @@ export const createReview = async (req, res) => {
   try {
     const { suiteId, bookingId, ratings, title, comment, guestType, stayedInMonth } = req.body;
 
-    // Check if booking exists and belongs to user (verified stay)
-    let isVerifiedStay = false;
-    if (bookingId) {
-      const booking = await Booking.findOne({
-        $or: [{ _id: bookingId }, { bookingId }],
-        user: req.user._id,
-        suite: suiteId,
-        status: "checked_out",
-      });
-      if (booking) isVerifiedStay = true;
+    if (!bookingId || !suiteId) {
+      return sendError(res, 400, "A completed booking and suite are required to submit a review");
     }
 
-    // Check if user already reviewed this suite
-    const existing = await Review.findOne({ user: req.user._id, suite: suiteId });
+    const bookingQuery = mongoose.isValidObjectId(bookingId)
+      ? { _id: bookingId }
+      : { bookingId };
+    const booking = await Booking.findOne({
+      ...bookingQuery,
+      user: req.user._id,
+      suite: suiteId,
+      status: "checked_out",
+    });
+    if (!booking) {
+      return sendError(res, 403, "Reviews can only be submitted for your completed stays");
+    }
+
+    // Each completed booking can receive one review; separate stays may review the same suite.
+    const existing = await Review.findOne({ booking: booking._id });
     if (existing) {
-      return sendError(res, 409, "You have already submitted a review for this suite. You can edit your existing review.");
+      return sendError(res, 409, "You have already submitted a review for this completed stay.");
     }
 
     const review = await Review.create({
       user: req.user._id,
       suite: suiteId,
-      booking: bookingId || undefined,
+      booking: booking._id,
       ratings,
       title,
       comment,
       guestType,
       stayedInMonth,
-      isVerifiedStay,
+      isVerifiedStay: true,
       status: "approved",
     });
 

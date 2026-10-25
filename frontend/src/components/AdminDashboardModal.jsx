@@ -25,7 +25,7 @@ import { bookingsAPI, diningAPI, suitesAPI } from '../services/api';
 import { SUITES_DATA } from '../data/hotelData';
 import AdminCustomersPanel from './AdminCustomersPanel';
 
-export default function AdminDashboardModal({ isOpen, onClose, user, currency = 'IND' }) {
+export default function AdminDashboardModal({ isOpen, onClose, onOpenMarketplaceReview, user, currency = 'IND' }) {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'bookings' | 'dining' | 'suites'
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState([]);
@@ -217,6 +217,15 @@ export default function AdminDashboardModal({ isOpen, onClose, user, currency = 
           </div>
 
           <div className="flex items-center gap-2">
+            {user?.role === 'admin' && (
+              <button
+                type="button"
+                onClick={onOpenMarketplaceReview}
+                className="rounded-xl border border-hotel-gold/30 px-3 py-2 text-xs font-semibold text-hotel-gold transition-colors hover:bg-hotel-gold/10"
+              >
+                Host reviews
+              </button>
+            )}
             <button
               onClick={fetchAdminData}
               disabled={loading}
