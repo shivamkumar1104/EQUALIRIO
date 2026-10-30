@@ -46,10 +46,10 @@ export default function FaqSection({ onToast }) {
   };
 
   return (
-    <section id="faqs" className="py-24 px-4 sm:px-6 lg:px-8 bg-hotel-cream relative">
+    <section id="faqs" className="py-14 px-4 sm:px-6 lg:px-8 bg-hotel-cream relative">
       <div className="max-w-7xl mx-auto">
         
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-8">
           <div className="inline-flex items-center gap-2 text-hotel-gold-dark text-xs uppercase tracking-[0.3em] font-medium mb-2">
             <HelpCircle className="w-4 h-4 text-hotel-emerald" /> Guest Knowledge & Assistance
           </div>
@@ -61,18 +61,18 @@ export default function FaqSection({ onToast }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
           
           {/* FAQ Accordion List */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className="lg:col-span-7 space-y-3">
             {faqsList.map((faq, idx) => (
               <div
                 key={idx}
-                className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm transition-all"
+                className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm transition-all"
               >
                 <button
                   onClick={() => toggleFaq(idx)}
-                  className="w-full p-6 text-left flex items-center justify-between gap-4 font-serif text-lg text-hotel-emerald-dark font-medium hover:text-hotel-gold-dark transition-colors"
+                  className="w-full px-5 py-4 text-left flex items-center justify-between gap-4 font-serif text-lg text-hotel-emerald-dark font-medium hover:text-hotel-gold-dark transition-colors"
                 >
                   <span>{faq.q}</span>
                   <ChevronDown className={`w-5 h-5 text-hotel-gold shrink-0 transition-transform duration-300 ${
@@ -81,7 +81,7 @@ export default function FaqSection({ onToast }) {
                 </button>
 
                 {openIndex === idx && (
-                  <div className="px-6 pb-6 text-xs text-gray-600 font-light leading-relaxed border-t border-gray-100 pt-4">
+                  <div className="px-5 pb-5 text-xs text-gray-600 font-light leading-relaxed border-t border-gray-100 pt-3">
                     {faq.a}
                   </div>
                 )}
@@ -90,7 +90,7 @@ export default function FaqSection({ onToast }) {
           </div>
 
           {/* Concierge Direct Box */}
-          <div className="lg:col-span-5 bg-hotel-emerald-dark text-white p-8 rounded-3xl border border-hotel-gold/30 shadow-2xl flex flex-col justify-between">
+          <div className="lg:col-span-5 bg-hotel-emerald-dark text-white p-6 rounded-lg border border-hotel-gold/30 shadow-2xl flex flex-col justify-between">
             <div>
               <span className="text-[10px] uppercase tracking-widest text-hotel-gold font-bold mb-2 block">
                 24/7 Butler Desk

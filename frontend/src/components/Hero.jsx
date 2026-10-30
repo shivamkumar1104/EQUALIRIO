@@ -22,15 +22,14 @@ export default function Hero({ onSearchBooking, hotelInfo, reviewStats }) {
   };
 
   return (
-    <section className="relative flex items-center justify-center min-h-screen px-4 pt-24 pb-16 overflow-hidden sm:px-6 lg:px-8 bg-hotel-emerald-dark">
+    <section className="equalirio-hero relative flex items-center justify-center min-h-screen px-4 pt-24 pb-16 overflow-hidden sm:px-6 lg:px-8 bg-hotel-emerald-dark">
       
       {/* Background Media & Gradients */}
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2000&q=90"
           alt={`${info.name} Luxury Resort & Bay`}
-          className="object-cover object-center w-full h-full transition-transform scale-105 filter brightness-75 duration-10000 animate-pulse"
-          style={{ animationDuration: '20s' }}
+          className="object-cover object-center w-full h-full filter brightness-75"
         />
         {/* Layered overlays for dramatic contrast */}
         <div className="absolute inset-0 bg-gradient-to-t from-hotel-emerald-dark via-black/40 to-black/70"></div>
@@ -43,18 +42,18 @@ export default function Hero({ onSearchBooking, hotelInfo, reviewStats }) {
       <div className="relative z-10 flex flex-col items-center max-w-5xl mx-auto text-center">
         
         {/* Top Award Pill */}
-        <div className="inline-flex items-center gap-2 bg-hotel-emerald/80 border border-hotel-gold/40 px-4 py-1.5 rounded-full backdrop-blur-md mb-6 animate-fade-in">
-          <Star className="w-4 h-4 text-hotel-gold fill-hotel-gold" />
-          <span className="text-xs font-medium tracking-widest uppercase text-hotel-gold-light">
-            {t('hero.badge')}
-          </span>
-          <span className="w-1 h-1 rounded-full bg-hotel-gold"></span>
-          {reviewStats?.count > 0 && (
-            <span className="font-mono text-xs text-white/90">
-              {Number(reviewStats.average).toFixed(1)} ⭐ ({reviewStats.count} {reviewStats.count === 1 ? 'review' : 'reviews'})
+        {reviewStats?.count > 0 && (
+          <div className="inline-flex items-center gap-2 bg-hotel-emerald/80 border border-hotel-gold/40 px-4 py-1.5 rounded-md backdrop-blur-md mb-6 animate-fade-in">
+            <Star className="w-4 h-4 text-hotel-gold fill-hotel-gold" />
+            <span className="text-xs font-medium tracking-widest uppercase text-hotel-gold-light">
+              Guest rating
             </span>
-          )}
-        </div>
+            <span className="w-1 h-1 rounded-full bg-hotel-gold"></span>
+            <span className="font-mono text-xs text-white/90">
+              {Number(reviewStats.average).toFixed(1)} rating ({reviewStats.count} {reviewStats.count === 1 ? 'review' : 'reviews'})
+            </span>
+          </div>
+        )}
 
         {/* Main Heading */}
         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif text-white font-normal tracking-wide leading-[1.1] mb-6 drop-shadow-2xl">
@@ -70,7 +69,7 @@ export default function Hero({ onSearchBooking, hotelInfo, reviewStats }) {
         </p>
 
         {/* Floating Quick Reservation Engine Box */}
-        <div className="w-full max-w-4xl p-4 border shadow-2xl bg-hotel-emerald-dark/85 backdrop-blur-xl border-hotel-gold/30 rounded-2xl sm:p-6 gold-border-glow">
+        <div className="equalirio-hero-search w-full max-w-4xl p-4 border shadow-2xl bg-hotel-emerald-dark/85 backdrop-blur-xl border-hotel-gold/30 rounded-2xl sm:p-6 gold-border-glow">
           <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             
             {/* Check In */}

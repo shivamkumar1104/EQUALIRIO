@@ -23,6 +23,7 @@ import SpaBookingModal from './components/SpaBookingModal';
 import HostDashboardModal from './components/HostDashboardModal';
 import MarketplaceReviewModal from './components/MarketplaceReviewModal';
 import StaysMarketplace from './components/StaysMarketplace';
+import LegalModal from './components/LegalModal';
 
 import { HOTEL_INFO } from './data/hotelData';
 import { reviewsAPI, hotelAPI, authAPI } from './services/api';
@@ -43,6 +44,7 @@ export default function App() {
   const [currency, setCurrency] = useState('IND');
   const [toastMessage, setToastMessage] = useState(null);
   const [hotelInfo, setHotelInfo] = useState(HOTEL_INFO);
+  const [legalPage, setLegalPage] = useState(null);
 
   // Booking Modal State
   const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -221,7 +223,6 @@ export default function App() {
         onLogout={handleLogout}
         onOpenMyBookings={() => setIsMyBookingsOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
-        onOpenHost={handleOpenHostDashboard}
       />
 
       {/* Main Content Sections */}
@@ -279,8 +280,11 @@ export default function App() {
       <Footer
         hotelInfo={hotelInfo}
         onToast={(msg) => setToastMessage(msg)}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onOpenLegal={setLegalPage}
       />
+
+      <LegalModal type={legalPage} onClose={() => setLegalPage(null)} />
 
       {/* MODALS */}
       {/* 1. Multi-step Suite Booking Modal */}

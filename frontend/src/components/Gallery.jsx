@@ -63,10 +63,10 @@ export default function Gallery() {
   };
 
   return (
-    <section id="gallery" className="py-24 px-4 sm:px-6 lg:px-8 bg-hotel-cream relative">
+    <section id="gallery" className="py-14 px-4 sm:px-6 lg:px-8 bg-hotel-cream relative">
       <div className="max-w-7xl mx-auto">
         
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="text-center max-w-3xl mx-auto mb-8">
           <div className="inline-flex items-center gap-2 text-hotel-gold-dark text-xs uppercase tracking-[0.3em] font-medium mb-2">
             <Camera className="w-4 h-4 text-hotel-emerald" /> {t('gallery.subtitle')}
           </div>
@@ -79,12 +79,12 @@ export default function Gallery() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex justify-center items-center gap-2 sm:gap-4 mb-12 flex-wrap">
+        <div className="flex justify-center items-center gap-2 sm:gap-3 mb-8 flex-wrap">
           {categories.map((cat) => (
             <button
               key={cat.key}
               onClick={() => setActiveCategory(cat.key)}
-              className={`px-5 py-2 rounded-full text-xs uppercase tracking-widest font-semibold transition-all ${
+              className={`px-4 py-2 rounded-md text-xs uppercase tracking-widest font-semibold transition-all ${
                 activeCategory === cat.key
                   ? 'bg-hotel-emerald text-white shadow-luxury'
                   : 'bg-white text-gray-600 hover:text-hotel-emerald border border-gray-200'
@@ -96,12 +96,12 @@ export default function Gallery() {
         </div>
 
         {/* Image Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredGallery.map((item, idx) => (
             <div
               key={item.id}
               onClick={() => handleOpenLightbox(idx)}
-              className="relative h-72 rounded-2xl overflow-hidden shadow-lg cursor-pointer group border-2 border-white"
+              className="relative aspect-[4/3] rounded-lg overflow-hidden shadow-lg cursor-pointer group border-2 border-white"
             >
               <img
                 src={item.image}

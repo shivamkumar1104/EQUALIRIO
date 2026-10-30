@@ -3,7 +3,7 @@ import { HOTEL_INFO } from '../data/hotelData';
 import { membershipAPI } from '../services/api';
 import { Sparkles, MapPin, Phone, Mail, Send, Instagram, Facebook, Youtube, Loader2, AlertCircle, CheckCircle, X } from 'lucide-react';
 
-export default function Footer({ onToast, hotelInfo, onOpenAuth }) {
+export default function Footer({ onToast, hotelInfo, onOpenAuth, onOpenLegal }) {
   const info = hotelInfo || HOTEL_INFO;
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +49,7 @@ export default function Footer({ onToast, hotelInfo, onOpenAuth }) {
 
   return (
     <>
-      <footer className="bg-hotel-emerald-dark text-white border-t border-hotel-gold/20 pt-16 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <footer className="equalirio-footer bg-hotel-emerald-dark text-white border-t border-hotel-gold/20 pt-16 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           
           {/* Top Grid */}
@@ -61,7 +61,7 @@ export default function Footer({ onToast, hotelInfo, onOpenAuth }) {
                 <div className="w-10 h-10 rounded-full border border-hotel-gold flex items-center justify-center bg-hotel-emerald">
                   <Sparkles className="w-5 h-5 text-hotel-gold" />
                 </div>
-                <span className="font-serif text-3xl tracking-[0.2em] font-bold text-white">
+                <span className="equalirio-footer-brand font-serif text-3xl tracking-[0.2em] font-bold text-white">
                   {info.name}
                 </span>
               </div>
@@ -159,8 +159,10 @@ export default function Footer({ onToast, hotelInfo, onOpenAuth }) {
               )}
             </div>
 
-            <div>
-              © 2026 {info.name} Luxury Resort & Spa. All Rights Reserved.
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <button type="button" onClick={() => onOpenLegal?.('privacy')} className="footer-legal-link">Privacy Policy</button>
+              <button type="button" onClick={() => onOpenLegal?.('terms')} className="footer-legal-link">Terms & Conditions</button>
+              <span>© 2026 {info.name} Luxury Resort & Spa. All Rights Reserved.</span>
             </div>
           </div>
 

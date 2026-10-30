@@ -36,6 +36,7 @@ export default function MyBookingsModal({
   const [diningReservations, setDiningReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [cancelModalItem, setCancelModalItem] = useState(null); // item to cancel
   const [cancelReason, setCancelReason] = useState('Change of travel schedule');
@@ -92,32 +93,32 @@ export default function MyBookingsModal({
 
   const handleCancelBooking = async () => {
     if (!cancelModalItem) return;
+    setActionError('');
     setActionLoadingId(cancelModalItem._id || cancelModalItem.bookingId);
     try {
       if (cancelModalItem.type === 'dining') {
         const id = cancelModalItem._id || cancelModalItem.reservationId;
-        await diningAPI.cancel(id, cancelReason);
-        setDiningReservations((prev) =>
-          prev.map((item) =>
-            (item._id === id || item.reservationId === id)
-              ? { ...item, status: 'cancelled' }
-              : item
-          )
-        );
+        const response = await diningAPI.cancel(id, cancelReason);
+        const cancelled = response?.data?.reservation;
+        setDiningReservations((prev) => prev.map((item) => (
+          item._id === id || item.reservationId === id
+            ? { ...item, ...(cancelled || {}), status: 'cancelled' }
+            : item
+        )));
       } else {
         const id = cancelModalItem.bookingId || cancelModalItem._id;
-        await bookingsAPI.cancel(id, cancelReason);
-        setSuiteBookings((prev) =>
-          prev.map((b) =>
-            (b.bookingId === id || b._id === id)
-              ? { ...b, status: 'cancelled' }
-              : b
-          )
-        );
+        const response = await bookingsAPI.cancel(id, cancelReason);
+        const cancelled = response?.data?.booking;
+        setSuiteBookings((prev) => prev.map((booking) => (
+          booking.bookingId === id || booking._id === id
+            ? { ...booking, ...(cancelled || {}), status: 'cancelled' }
+            : booking
+        )));
       }
       setCancelModalItem(null);
+      await fetchDashboardData();
     } catch (err) {
-      alert(err.message || 'Failed to cancel reservation');
+      setActionError(err.message || 'Failed to cancel reservation');
     } finally {
       setActionLoadingId(null);
     }
@@ -274,6 +275,11 @@ export default function MyBookingsModal({
 
         {/* Scrollable Content Body */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-4">
+          {actionError && (
+            <div role="alert" className="border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+              {actionError}
+            </div>
+          )}
           
           {loading ? (
             <div className="py-20 text-center space-y-3">

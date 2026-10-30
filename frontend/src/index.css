@@ -1,13 +1,515 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+:root {
+  color-scheme: light;
+  --equalirio-canvas: #f9f6f0;
+  --equalirio-surface: #ffffff;
+  --equalirio-stone: #e2dcd3;
+  --equalirio-ink: #1a2b32;
+  --equalirio-muted: #66757b;
+  --equalirio-emerald: #1a2b32;
+  --equalirio-pine: #2d4650;
+  --equalirio-champagne: #c5a880;
+  --equalirio-shadow: 0 12px 32px -4px rgba(26, 43, 50, 0.08), 0 4px 12px -2px rgba(26, 43, 50, 0.04);
+}
+
 @layer base {
   body {
-    @apply bg-hotel-cream text-hotel-dark overflow-x-hidden;
+    @apply overflow-x-hidden;
+    background: var(--equalirio-canvas);
+    color: var(--equalirio-ink);
+    font-family: 'Plus Jakarta Sans', Inter, sans-serif;
   }
 
   h1, h2, h3, h4, .font-serif-heading {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+.equalirio-site-nav {
+  background: rgba(251, 249, 245, 0.96) !important;
+  border-bottom: 1px solid var(--equalirio-stone) !important;
+  box-shadow: 0 4px 18px rgba(14, 42, 34, 0.045) !important;
+  color: var(--equalirio-ink);
+  padding-block: 0.75rem !important;
+}
+
+.equalirio-site-nav {
+  background-image: none !important;
+}
+
+.equalirio-site-nav button,
+.equalirio-footer button {
+  border-radius: 4px;
+}
+
+.equalirio-site-nav .equalirio-brand span:first-of-type {
+  color: var(--equalirio-emerald) !important;
+  letter-spacing: 0.16em !important;
+}
+
+.equalirio-site-nav .equalirio-brand span:last-of-type {
+  color: var(--equalirio-muted) !important;
+}
+
+.equalirio-site-nav .equalirio-brand > div:first-child {
+  background: var(--equalirio-emerald) !important;
+  border-color: var(--equalirio-champagne) !important;
+}
+
+.equalirio-site-nav nav > a {
+  color: var(--equalirio-ink) !important;
+  letter-spacing: 0.12em !important;
+}
+
+.equalirio-site-nav nav > a:hover {
+  color: var(--equalirio-pine) !important;
+}
+
+.equalirio-site-nav nav > a::after {
+  background-color: var(--equalirio-champagne) !important;
+}
+
+.equalirio-site-nav .equalirio-nav-reserve {
+  background: var(--equalirio-emerald) !important;
+  background-image: none !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+.equalirio-site-nav .equalirio-nav-reserve:hover {
+  background: var(--equalirio-pine) !important;
+  color: #fff !important;
+}
+
+.equalirio-site-nav [aria-label="Toggle Menu"] {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-site-nav .equalirio-popover :is(p, button, span) {
+  color: var(--equalirio-ink);
+}
+
+.equalirio-site-nav .equalirio-popover button:hover {
+  background: var(--equalirio-surface) !important;
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-site-nav .equalirio-mobile-drawer .text-white,
+.equalirio-site-nav .equalirio-mobile-drawer .text-gray-200,
+.equalirio-site-nav .equalirio-mobile-drawer .text-gray-300,
+.equalirio-site-nav .equalirio-mobile-drawer .text-gray-400 {
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-site-nav .equalirio-mobile-drawer .text-hotel-gold {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-site-nav .equalirio-mobile-drawer .bg-white\/5,
+.equalirio-site-nav .equalirio-mobile-drawer .bg-white\/10 {
+  background: var(--equalirio-surface) !important;
+}
+
+.equalirio-site-nav .equalirio-mobile-drawer .border-white\/5,
+.equalirio-site-nav .equalirio-mobile-drawer .border-white\/10 {
+  border-color: var(--equalirio-stone) !important;
+}
+
+.equalirio-site-nav .equalirio-mobile-drawer button {
+  border-radius: 4px !important;
+}
+
+.equalirio-site-nav .equalirio-popover {
+  background: var(--equalirio-canvas) !important;
+  border: 1px solid var(--equalirio-stone) !important;
+  box-shadow: var(--equalirio-shadow) !important;
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-site-nav .equalirio-mobile-drawer {
+  background: var(--equalirio-canvas) !important;
+  border-color: var(--equalirio-stone) !important;
+  box-shadow: var(--equalirio-shadow) !important;
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-site-nav .equalirio-mobile-drawer nav > a {
+  border-color: var(--equalirio-stone) !important;
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-hero {
+  min-height: min(760px, 92vh);
+  padding-top: 7rem;
+  padding-bottom: 4rem;
+}
+
+.equalirio-hero h1 {
+  font-size: clamp(2.5rem, 5vw, 4.5rem) !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.12 !important;
+}
+
+.equalirio-hero > div.relative.z-10 > p {
+  color: #f3eadc !important;
+}
+
+.equalirio-hero-search {
+  background: rgba(251, 249, 245, 0.96) !important;
+  border: 1px solid rgba(226, 221, 213, 0.9) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--equalirio-shadow) !important;
+}
+
+.equalirio-hero-search label {
+  color: var(--equalirio-muted) !important;
+  letter-spacing: 0.08em !important;
+}
+
+.equalirio-hero-search input,
+.equalirio-hero-search select {
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-hero-search input::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+.equalirio-hero-search button[type="submit"],
+.equalirio-marketplace form button[type="submit"] {
+  background: var(--equalirio-emerald) !important;
+  background-image: none !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+.equalirio-hero-search button[type="submit"]:hover,
+.equalirio-marketplace form button[type="submit"]:hover {
+  background: var(--equalirio-pine) !important;
+}
+
+.equalirio-hero-search > form > div {
+  border-color: var(--equalirio-stone) !important;
+}
+
+.equalirio-marketplace {
+  background: var(--equalirio-canvas) !important;
+}
+
+.equalirio-marketplace > div > div:first-of-type {
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.equalirio-marketplace h2 {
+  color: var(--equalirio-emerald) !important;
+  font-size: clamp(2rem, 4vw, 3rem) !important;
+}
+
+.equalirio-marketplace p {
+  color: var(--equalirio-muted);
+}
+
+.equalirio-marketplace form {
+  border-color: var(--equalirio-stone) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--equalirio-shadow) !important;
+}
+
+.equalirio-marketplace form label {
+  color: var(--equalirio-muted) !important;
+  letter-spacing: 0.08em !important;
+}
+
+.equalirio-marketplace form input,
+.equalirio-marketplace form select {
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-marketplace .equalirio-stay-card {
+  border-color: var(--equalirio-stone) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.equalirio-marketplace .equalirio-stay-card:hover {
+  box-shadow: var(--equalirio-shadow) !important;
+  transform: translateY(-2px);
+}
+
+.equalirio-marketplace .equalirio-stay-card h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+}
+
+.equalirio-suites {
+  background: var(--equalirio-canvas) !important;
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-suites h2 {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-suites .text-gray-300,
+.equalirio-suites .text-gray-400 {
+  color: var(--equalirio-muted) !important;
+}
+
+.equalirio-suites .equalirio-suite-card .text-white,
+.equalirio-suites .equalirio-suite-card .text-gray-300,
+.equalirio-suites .equalirio-suite-card .text-gray-400 {
+  color: var(--equalirio-muted) !important;
+}
+
+.equalirio-suites .equalirio-suite-card .relative.h-72 {
+  height: 18rem;
+}
+
+.equalirio-suites .equalirio-suite-card h3 {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-suites .equalirio-suite-card {
+  background: #fff !important;
+  border: 1px solid var(--equalirio-stone) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.equalirio-suites .equalirio-suite-card h3 {
+  color: var(--equalirio-emerald) !important;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.equalirio-suites .equalirio-suite-card p,
+.equalirio-suites .equalirio-suite-card .equalirio-suite-meta {
+  color: var(--equalirio-muted) !important;
+  border-color: var(--equalirio-stone) !important;
+}
+
+.equalirio-suites .equalirio-suite-card > div:last-child {
+  border-color: var(--equalirio-stone) !important;
+}
+
+.equalirio-suites .equalirio-suite-card button:first-child {
+  border-color: var(--equalirio-stone) !important;
+  color: var(--equalirio-emerald) !important;
+  border-radius: 4px !important;
+}
+
+.equalirio-suites .equalirio-suite-card button:last-child {
+  background: var(--equalirio-emerald) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+.equalirio-dining,
+.equalirio-reviews {
+  background: var(--equalirio-canvas) !important;
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-dining h2,
+.equalirio-reviews h2,
+.equalirio-dining h3,
+.equalirio-reviews h3 {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-dining .grid > div {
+  background: #fff !important;
+  border-color: var(--equalirio-stone) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.equalirio-dining .grid > div h3 {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-dining .grid > div p,
+.equalirio-dining .grid > div .text-gray-400 {
+  color: var(--equalirio-muted) !important;
+}
+
+.equalirio-dining .grid > div .bg-white\/5 {
+  background: var(--equalirio-surface) !important;
+  border-color: var(--equalirio-stone) !important;
+}
+
+.equalirio-dining .grid > div .text-white {
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-dining .grid > div button {
+  background: var(--equalirio-emerald) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+.equalirio-reviews h2 {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-reviews .rounded-3xl,
+.equalirio-reviews article,
+.equalirio-reviews .rounded-2xl {
+  background: #fff !important;
+  border-color: var(--equalirio-stone) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.equalirio-reviews :is(.text-white, .text-gray-300, .text-gray-400) {
+  color: var(--equalirio-muted) !important;
+}
+
+.equalirio-reviews article h3,
+.equalirio-reviews article h4 {
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-reviews button {
+  border-color: var(--equalirio-stone) !important;
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-reviews button:hover {
+  background: var(--equalirio-emerald) !important;
+  color: #fff !important;
+}
+
+.equalirio-reviews .text-hotel-gold,
+.equalirio-reviews .text-hotel-gold\/40,
+.equalirio-reviews .text-hotel-gold\/70 {
+  color: var(--equalirio-champagne) !important;
+}
+
+.equalirio-footer {
+  background: var(--equalirio-surface) !important;
+  border-color: var(--equalirio-stone) !important;
+  color: var(--equalirio-ink) !important;
+}
+
+.equalirio-footer h4,
+.equalirio-footer .equalirio-footer-brand {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-footer p,
+.equalirio-footer li,
+.equalirio-footer a,
+.equalirio-footer span {
+  color: var(--equalirio-muted);
+}
+
+.equalirio-footer a:hover {
+  color: var(--equalirio-emerald) !important;
+}
+
+.equalirio-footer .footer-legal-link {
+  padding: 0;
+  color: var(--equalirio-muted);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.equalirio-footer .footer-legal-link:hover {
+  color: var(--equalirio-emerald);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.legal-modal {
+  border: 1px solid var(--equalirio-stone);
+  border-radius: 6px;
+}
+
+.legal-close {
+  border: 1px solid var(--equalirio-stone);
+  background: transparent;
+}
+
+/* Keep the landing page compact while preserving clear section rhythm. */
+main > section:not(.equalirio-hero) {
+  scroll-margin-top: 5rem;
+}
+
+.equalirio-site-nav nav {
+  gap: 1.25rem !important;
+}
+
+.equalirio-site-nav > div > div {
+  min-height: 3.5rem;
+}
+
+.equalirio-site-nav .equalirio-brand {
+  gap: 0.6rem;
+}
+
+.equalirio-site-nav .equalirio-brand > div:first-child {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.equalirio-marketplace .equalirio-stay-card img,
+.equalirio-suites .equalirio-suite-card img,
+.equalirio-dining img {
+  display: block;
+}
+
+.equalirio-amenities img {
+  display: block;
+}
+
+ :is(
+  .equalirio-site-nav a,
+  .equalirio-site-nav button,
+  .equalirio-hero a,
+  .equalirio-hero button,
+  .equalirio-marketplace a,
+  .equalirio-marketplace button,
+  .equalirio-suites a,
+  .equalirio-suites button
+):focus-visible {
+  outline: 2px solid var(--equalirio-champagne);
+  outline-offset: 3px;
+}
+
+@media (max-width: 639px) {
+  .equalirio-hero {
+    min-height: 720px;
+    padding-top: 6rem;
+    padding-bottom: 4rem;
+  }
+
+  .equalirio-hero-search {
+    padding: 1rem !important;
+  }
+
+  .equalirio-marketplace > div > div:first-of-type {
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -16,10 +518,10 @@
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #061713;
+  background: var(--equalirio-surface);
 }
 ::-webkit-scrollbar-thumb {
-  background: #c9a050;
+  background: var(--equalirio-champagne);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -123,4 +625,128 @@ html, body {
   width: 0 !important;
   height: 0 !important;
   overflow: hidden !important;
+}
+
+/* Coastal Sand 60/30/10 application */
+body {
+  background: #f9f6f0;
+  color: #1a2b32;
+}
+
+.equalirio-site-nav {
+  background: rgba(26, 43, 50, 0.97) !important;
+  background-image: none !important;
+  border-bottom-color: rgba(197, 168, 128, 0.45) !important;
+  color: #ffffff !important;
+}
+
+.equalirio-site-nav .equalirio-brand span:first-of-type,
+.equalirio-site-nav nav > a,
+.equalirio-site-nav [aria-label="Toggle Menu"] {
+  color: #ffffff !important;
+}
+
+.equalirio-site-nav .equalirio-brand span:last-of-type,
+.equalirio-site-nav nav > a::after,
+.equalirio-site-nav .text-hotel-gold,
+.equalirio-site-nav .equalirio-brand > div:first-child {
+  color: #c5a880 !important;
+  border-color: #c5a880 !important;
+}
+
+.equalirio-site-nav .equalirio-nav-reserve,
+.equalirio-hero-search button[type="submit"],
+.equalirio-marketplace form button[type="submit"],
+.equalirio-suites .equalirio-suite-card button:last-child,
+.equalirio-dining .grid > div button {
+  background: #c5a880 !important;
+  background-image: none !important;
+  color: #1a2b32 !important;
+}
+
+.equalirio-site-nav .equalirio-nav-reserve:hover,
+.equalirio-hero-search button[type="submit"]:hover,
+.equalirio-marketplace form button[type="submit"]:hover,
+.equalirio-suites .equalirio-suite-card button:last-child:hover,
+.equalirio-dining .grid > div button:hover {
+  background: #d8c3a4 !important;
+}
+
+.equalirio-hero,
+.equalirio-footer {
+  background-color: #1a2b32 !important;
+}
+
+.equalirio-hero-search {
+  background: #ffffff !important;
+  border-color: #e2dcd3 !important;
+}
+
+.equalirio-marketplace,
+.equalirio-suites,
+.equalirio-dining,
+.equalirio-reviews,
+.equalirio-faq {
+  background: #f9f6f0 !important;
+  color: #1a2b32 !important;
+}
+
+.equalirio-marketplace h2,
+.equalirio-suites h2,
+.equalirio-dining h2,
+.equalirio-reviews h2,
+.equalirio-faq h2,
+.equalirio-dining h3,
+.equalirio-reviews h3 {
+  color: #1a2b32 !important;
+}
+
+.equalirio-marketplace .equalirio-stay-card,
+.equalirio-suites .equalirio-suite-card,
+.equalirio-dining .grid > div,
+.equalirio-reviews .rounded-3xl,
+.equalirio-reviews article,
+.equalirio-reviews .rounded-2xl {
+  background: #ffffff !important;
+  border-color: #e2dcd3 !important;
+}
+
+.equalirio-suites .equalirio-suite-card h3,
+.equalirio-dining .grid > div h3,
+.equalirio-reviews article h3,
+.equalirio-reviews article h4 {
+  color: #1a2b32 !important;
+}
+
+.equalirio-marketplace p,
+.equalirio-suites .equalirio-suite-card p,
+.equalirio-suites .equalirio-suite-card .equalirio-suite-meta,
+.equalirio-dining .grid > div p,
+.equalirio-dining .grid > div .text-gray-400,
+.equalirio-reviews :is(.text-white, .text-gray-300, .text-gray-400) {
+  color: #66757b !important;
+}
+
+.equalirio-footer {
+  border-color: rgba(197, 168, 128, 0.45) !important;
+  color: #ffffff !important;
+}
+
+.equalirio-footer h4,
+.equalirio-footer .equalirio-footer-brand,
+.equalirio-footer .text-hotel-gold {
+  color: #c5a880 !important;
+}
+
+.equalirio-footer p,
+.equalirio-footer li,
+.equalirio-footer a,
+.equalirio-footer span,
+.equalirio-footer .footer-legal-link {
+  color: #d7dfdf;
+}
+
+.legal-modal {
+  background: #ffffff !important;
+  border-color: #e2dcd3 !important;
 }

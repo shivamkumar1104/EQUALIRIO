@@ -78,7 +78,7 @@ export default function Suites({ onSelectSuite, onBookSuite, currency }) {
   };
 
   return (
-    <section id="suites" className="py-24 px-4 sm:px-6 lg:px-8 bg-hotel-emerald-dark text-white relative">
+    <section id="suites" className="equalirio-suites py-14 px-4 sm:px-6 lg:px-8 bg-hotel-emerald-dark text-white relative">
       
       {/* Decorative Gold Radial Light */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-hotel-gold/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -120,7 +120,7 @@ export default function Suites({ onSelectSuite, onBookSuite, currency }) {
           {filteredSuites.map((suite) => (
             <div
               key={suite.id}
-              className="bg-hotel-emerald/40 border border-hotel-gold/20 rounded-3xl overflow-hidden hover:border-hotel-gold/60 transition-all duration-500 group flex flex-col justify-between shadow-2xl"
+              className="equalirio-suite-card bg-hotel-emerald/40 border border-hotel-gold/20 rounded-3xl overflow-hidden hover:border-hotel-gold/60 transition-all duration-500 group flex flex-col justify-between shadow-2xl"
             >
               <div>
                 
@@ -159,7 +159,7 @@ export default function Suites({ onSelectSuite, onBookSuite, currency }) {
                   </p>
 
                   {/* Key Details Bar */}
-                  <div className="grid grid-cols-2 gap-3 py-3 border-y border-white/10 text-xs text-gray-300 mb-4 font-light">
+                  <div className="equalirio-suite-meta grid grid-cols-2 gap-3 py-3 border-y border-white/10 text-xs text-gray-300 mb-4 font-light">
                     <div className="flex items-center gap-2">
                       <Maximize2 className="w-4 h-4 text-hotel-gold shrink-0" />
                       <span>{suite.size}</span>

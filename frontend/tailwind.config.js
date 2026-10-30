@@ -8,27 +8,27 @@ export default {
     extend: {
       colors: {
         hotel: {
-          emerald: '#0c2e26',
-          'emerald-light': '#144539',
-          'emerald-dark': '#061713',
-          gold: '#c9a050',
-          'gold-light': '#e0be75',
-          'gold-dark': '#9b7832',
-          cream: '#faf7f2',
-          sand: '#f2eae0',
-          dark: '#121615',
-          charcoal: '#1c2220',
-          muted: '#8a9490',
+          emerald: '#1A2B32',
+          'emerald-light': '#2D4650',
+          'emerald-dark': '#1A2B32',
+          gold: '#C5A880',
+          'gold-light': '#D8C3A4',
+          'gold-dark': '#9D805C',
+          cream: '#F9F6F0',
+          sand: '#E2DCD3',
+          dark: '#1A2B32',
+          charcoal: '#263A41',
+          muted: '#66757B',
         }
       },
       fontFamily: {
-        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
         sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
       },
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.25)',
-        'luxury': '0 20px 50px rgba(12, 46, 38, 0.15)',
-        'gold': '0 10px 30px rgba(201, 160, 80, 0.3)',
+        'luxury': '0 20px 50px rgba(26, 43, 50, 0.15)',
+        'gold': '0 10px 30px rgba(197, 168, 128, 0.3)',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

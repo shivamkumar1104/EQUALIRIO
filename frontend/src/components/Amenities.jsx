@@ -36,10 +36,10 @@ export default function Amenities({ onOpenInquiry, onOpenSpa }) {
   const currentAmenity = selectedAmenity || amenitiesList[0] || AMENITIES_DATA[0];
 
   return (
-    <section id="amenities" className="py-24 px-4 sm:px-6 lg:px-8 bg-hotel-cream relative">
+    <section id="amenities" className="py-14 px-4 sm:px-6 lg:px-8 bg-hotel-cream relative">
       <div className="max-w-7xl mx-auto">
         
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-8">
           <div className="inline-flex items-center gap-2 text-hotel-gold-dark text-xs uppercase tracking-[0.3em] font-medium mb-2">
             <Sparkles className="w-4 h-4 text-hotel-emerald" /> {t('amenities.subtitle')}
           </div>
@@ -52,7 +52,7 @@ export default function Amenities({ onOpenInquiry, onOpenSpa }) {
         </div>
 
         {/* Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           {/* Amenities Selector Buttons */}
           <div className="lg:col-span-5 flex flex-col gap-3">
@@ -60,7 +60,7 @@ export default function Amenities({ onOpenInquiry, onOpenSpa }) {
               <button
                 key={item.id}
                 onClick={() => setSelectedAmenity(item)}
-                className={`p-4 sm:p-5 rounded-2xl text-left transition-all duration-300 border ${
+                className={`p-4 rounded-lg text-left transition-all duration-300 border ${
                   currentAmenity.id === item.id
                     ? 'bg-hotel-emerald text-white border-hotel-gold shadow-luxury scale-[1.02]'
                     : 'bg-white text-gray-800 border-gray-200 hover:border-hotel-gold/50 hover:bg-gray-50'
@@ -87,11 +87,11 @@ export default function Amenities({ onOpenInquiry, onOpenSpa }) {
 
           {/* Featured Showcase Card */}
           <div className="lg:col-span-7">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white group">
+            <div className="relative h-full min-h-[420px] rounded-lg overflow-hidden shadow-2xl border-4 border-white group">
               <img
                 src={currentAmenity.image}
                 alt={currentAmenity.title}
-                className="w-full h-[480px] object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full min-h-[420px] object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-hotel-emerald-dark via-hotel-emerald-dark/40 to-transparent"></div>
 

@@ -67,8 +67,8 @@ export default function TableReservationModal({
         guestInfo: {
           firstName,
           lastName,
-          email: email.trim() || 'guest@equalirio-resort.com',
-          phone: phone.trim() || '+1-555-0199'
+          email: email.trim(),
+          phone: phone.trim()
         },
         occasion,
         specialRequests
@@ -235,6 +235,7 @@ export default function TableReservationModal({
                 <label className="block text-gray-300 uppercase tracking-wider mb-1 font-medium">Phone Number</label>
                 <input
                   type="tel"
+                  required
                   placeholder="+1 (555) 019-2831"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}

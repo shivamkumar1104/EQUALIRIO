@@ -56,10 +56,10 @@ export default function StaysMarketplace() {
   };
 
   return (
-    <section id="stays-marketplace" className="relative overflow-hidden bg-hotel-cream px-4 py-20 text-hotel-dark sm:px-6 lg:px-8">
+    <section id="stays-marketplace" className="equalirio-marketplace relative overflow-hidden bg-hotel-cream px-4 py-14 text-hotel-dark sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-hotel-gold/10 blur-3xl" />
       <div className="relative mx-auto max-w-7xl">
-        <div className="mx-auto mb-10 max-w-3xl text-center">
+        <div className="mx-auto mb-7 max-w-3xl text-center">
           <div className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-hotel-emerald">
             <Sparkles className="h-4 w-4" />
             EQUALIRIO stays
@@ -70,7 +70,7 @@ export default function StaysMarketplace() {
           </p>
         </div>
 
-        <form onSubmit={handleSearch} className="mx-auto mb-10 grid max-w-5xl gap-3 rounded-3xl border border-hotel-emerald/10 bg-white p-3 shadow-xl md:grid-cols-[1.4fr_0.7fr_0.9fr_auto] md:items-end md:rounded-full md:p-2">
+        <form onSubmit={handleSearch} className="mx-auto mb-7 grid max-w-5xl gap-3 rounded-lg border border-hotel-emerald/10 bg-white p-3 shadow-xl md:grid-cols-[1.4fr_0.7fr_0.9fr_auto] md:items-end md:p-2">
           <div className="px-3 py-2">
             <label htmlFor="stay-destination" className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-hotel-emerald-dark">Destination</label>
             <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function StaysMarketplace() {
             Finding published stays...
           </div>
         ) : listings.length === 0 ? (
-          <div className="mx-auto max-w-3xl rounded-3xl border border-dashed border-hotel-emerald/20 bg-white/70 px-6 py-12 text-center">
+          <div className="mx-auto max-w-3xl rounded-lg border border-dashed border-hotel-emerald/20 bg-white/70 px-6 py-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-hotel-emerald/10 text-hotel-emerald">
               <MapPin className="h-6 w-6" />
             </div>
@@ -131,7 +131,7 @@ export default function StaysMarketplace() {
             {listings.map((listing) => {
               const cover = listing.photos?.find((photo) => photo.isCover) || listing.photos?.[0];
               return (
-                <article key={listing._id} className="group overflow-hidden rounded-3xl border border-hotel-emerald/10 bg-white shadow-sm transition-shadow hover:shadow-xl">
+                <article key={listing._id} className="equalirio-stay-card group overflow-hidden rounded-3xl border border-hotel-emerald/10 bg-white shadow-sm transition-shadow hover:shadow-xl">
                   <div className="relative aspect-[4/3] overflow-hidden bg-hotel-emerald/5">
                     {cover?.url ? (
                       <img src={cover.url} alt={cover.alt || listing.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />

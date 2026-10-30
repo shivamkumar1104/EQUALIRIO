@@ -110,6 +110,27 @@ cd backend
 SEED_ALLOW_DESTRUCTIVE=true npm run seed
 ```
 
+### Rehearse the Suite-to-StayListing Migration
+
+The migration requires an approved host profile and explicit structured
+location, bed-count, and currency values; it never infers these from the
+legacy hotel address or invents a currency conversion. It creates unpublished
+draft listings only and does not modify suites or bookings. A run without
+`--apply` is read-only:
+
+```bash
+cd backend
+npm run migrate:suites -- --host-profile <approved-host-profile-id> --country <country> --city <city> --beds <beds-per-suite> --currency <ISO-4217-code>
+```
+
+Review the dry-run report before applying. To write drafts, use a non-production
+database, set `STAY_MIGRATION_ALLOW_WRITE=true`, and append `--apply`. The
+script preflights every unmigrated suite and aborts before writing if any
+record is invalid. Existing migrated suites are skipped; the unique source
+reference makes reruns safe without replacing edited listings. Review each
+draft's cancellation and check-in/out settings before publishing; migration
+does not establish these marketplace policies.
+
 ### 4. Start Development Servers
 
 ```bash

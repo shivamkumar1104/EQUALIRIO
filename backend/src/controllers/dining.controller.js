@@ -135,8 +135,12 @@ export const cancelReservation = async (req, res) => {
 
     const isOwner =
       reservation.user && reservation.user.toString() === req.user._id.toString();
+    const isGuestEmailOwner =
+      reservation.guestInfo?.email &&
+      req.user.email &&
+      reservation.guestInfo.email.toLowerCase() === req.user.email.toLowerCase();
     const isAdmin = req.user.role === "admin";
-    if (!isOwner && !isAdmin) {
+    if (!isOwner && !isGuestEmailOwner && !isAdmin) {
       return sendError(res, 403, "You do not have permission to cancel this reservation");
     }
 

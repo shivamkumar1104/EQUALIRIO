@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const stayListingSchema = new mongoose.Schema(
   {
+    sourceSuite: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Suite",
+    },
     host: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "HostProfile",
@@ -134,6 +138,7 @@ const stayListingSchema = new mongoose.Schema(
 stayListingSchema.index({ status: 1, "location.country": 1, "location.city": 1 });
 stayListingSchema.index({ status: 1, "capacity.guests": 1, nightlyPriceMinor: 1 });
 stayListingSchema.index({ "location.coordinates": "2dsphere" });
+stayListingSchema.index({ sourceSuite: 1 }, { unique: true, sparse: true });
 
 const StayListing = mongoose.model("StayListing", stayListingSchema);
 export default StayListing;

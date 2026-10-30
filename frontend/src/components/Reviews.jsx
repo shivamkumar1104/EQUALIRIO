@@ -13,9 +13,9 @@ export default function Reviews({
   const hasReviews = reviewsList.length > 0 && reviewStats.count > 0;
 
   return (
-    <section id="reviews" className="relative bg-hotel-emerald-dark px-4 py-24 text-white sm:px-6 lg:px-8">
+    <section id="reviews" className="equalirio-reviews relative bg-hotel-emerald-dark px-4 py-14 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto mb-12 max-w-3xl text-center">
+        <div className="mx-auto mb-8 max-w-3xl text-center">
           <div className="mb-2 inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.3em] text-hotel-gold">
             <Award className="h-4 w-4" /> {t('reviews.subtitle')}
           </div>
@@ -114,7 +114,7 @@ export default function Reviews({
             </div>
           </>
         ) : (
-          <div className="mx-auto max-w-2xl rounded-3xl border border-dashed border-hotel-gold/30 bg-white/[0.03] px-6 py-10 text-center">
+          <div className="mx-auto max-w-2xl rounded-lg border border-dashed border-hotel-gold/30 bg-white/[0.03] px-6 py-7 text-center">
             <MessageSquarePlus className="mx-auto mb-3 h-8 w-8 text-hotel-gold/70" />
             <h3 className="font-serif text-xl text-white">No guest reviews yet</h3>
             <p className="mt-2 text-sm text-gray-300">After your completed stay, you can share an honest review here.</p>

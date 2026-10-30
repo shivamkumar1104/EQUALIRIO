@@ -7,7 +7,7 @@ export default function Dining({ onReserveTable }) {
   const { t } = useTranslation();
 
   return (
-    <section id="dining" className="py-24 px-4 sm:px-6 lg:px-8 bg-hotel-emerald-dark text-white relative">
+    <section id="dining" className="equalirio-dining py-14 px-4 sm:px-6 lg:px-8 bg-hotel-emerald-dark text-white relative">
       <div className="max-w-7xl mx-auto">
         
         <div className="text-center max-w-3xl mx-auto mb-16">

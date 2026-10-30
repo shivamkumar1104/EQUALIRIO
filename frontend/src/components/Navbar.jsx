@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOTEL_INFO } from '../data/hotelData';
-import { Calendar, Globe, Menu, X, Sparkles, ChevronDown, User, LogOut, Receipt, Utensils, LayoutDashboard, Home } from 'lucide-react';
+import { Calendar, Globe, Menu, X, Sparkles, ChevronDown, User, LogOut, Receipt, Utensils, LayoutDashboard } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../i18n';
 
 export default function Navbar({
@@ -13,7 +13,6 @@ export default function Navbar({
   onLogout,
   onOpenMyBookings,
   onOpenAdmin,
-  onOpenHost
 }) {
   const { t, i18n } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -41,6 +40,7 @@ export default function Navbar({
   }, []);
 
   const navLinks = [
+    { name: 'Stays', href: '#stays-marketplace' },
     { name: t('nav.suites'), href: '#suites' },
     { name: t('nav.amenities'), href: '#amenities' },
     { name: t('nav.dining'), href: '#dining' },
@@ -50,17 +50,17 @@ export default function Navbar({
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`equalirio-site-nav fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
           ? 'bg-hotel-emerald-dark/90 backdrop-blur-md py-3 shadow-luxury border-b border-hotel-gold/20'
-          : 'bg-gradient-to-b from-black/80 via-black/40 to-transparent py-5'
+          : 'bg-black/35 py-5'
       }`}
     >
       <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6">
         <div className="flex items-center justify-between gap-3">
           
           {/* Brand Logo - Left Aligned */}
-          <a href="#" className="flex items-center gap-3 group shrink-0 mr-2">
+          <a href="#" className="equalirio-brand flex items-center gap-3 group shrink-0 mr-2">
             <div className="w-10 h-10 rounded-full border border-hotel-gold/60 flex items-center justify-center bg-hotel-emerald/40 group-hover:border-hotel-gold transition-colors">
               <Sparkles className="w-5 h-5 text-hotel-gold group-hover:rotate-45 transition-transform duration-500" />
             </div>
@@ -95,19 +95,16 @@ export default function Navbar({
             <div className="relative notranslate" translate="no">
               <button
                 onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
-                className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-hotel-gold px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors notranslate"
+                className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-hotel-gold px-2.5 py-1.5 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 transition-colors notranslate"
                 translate="no"
                 title="Select Language"
               >
                 <Globe className="w-3.5 h-3.5 text-hotel-gold notranslate" />
-                <span className="text-[11px] font-mono font-semibold tracking-wider text-hotel-gold uppercase notranslate" translate="no">
-                  Language
-                </span>
                 <ChevronDown className="w-3 h-3 opacity-60 notranslate" />
               </button>
 
               {currencyDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-hotel-emerald-dark border border-hotel-gold/30 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in text-white notranslate" translate="no">
+                <div className="equalirio-popover absolute right-0 mt-2 w-56 bg-hotel-emerald-dark border border-hotel-gold/30 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in text-white notranslate" translate="no">
                   <div className="p-1.5 max-h-60 overflow-y-auto notranslate" translate="no">
                     {SUPPORTED_LANGUAGES.map((l) => (
                       <button
@@ -139,18 +136,9 @@ export default function Navbar({
               
             </div>
 
-            {/* CTA Reserve Suite */}
-            <button
-              onClick={onOpenHost}
-              className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2.5 text-xs font-semibold tracking-wider text-white transition-colors hover:border-hotel-gold/50 hover:bg-white/10 hover:text-hotel-gold"
-            >
-              <Home className="h-3.5 w-3.5" />
-              <span>Become a host</span>
-            </button>
-
             <button
               onClick={() => onOpenBooking()}
-              className="flex items-center gap-2 bg-gradient-to-r from-hotel-gold to-hotel-gold-dark hover:from-hotel-gold-light hover:to-hotel-gold text-hotel-emerald-dark font-semibold text-xs tracking-wider uppercase px-5 py-2.5 rounded-full shadow-gold hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+              className="equalirio-nav-reserve flex items-center gap-2 bg-gradient-to-r from-hotel-gold to-hotel-gold-dark hover:from-hotel-gold-light hover:to-hotel-gold text-hotel-emerald-dark font-semibold text-xs tracking-wider uppercase px-4 py-2 rounded-md shadow-gold hover:shadow-lg transition-all"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span>{t('nav.reserveSuite')}</span>
@@ -209,7 +197,7 @@ export default function Navbar({
                   </button>
 
                   {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-hotel-emerald-dark border border-hotel-gold/30 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in text-white p-1.5">
+                    <div className="equalirio-popover absolute right-0 mt-2 w-52 bg-hotel-emerald-dark border border-hotel-gold/30 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in text-white p-1.5">
                       <div className="px-3 py-2 border-b border-white/10">
                         <p className="text-xs font-semibold text-white truncate">{user.name}</p>
                         <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
@@ -227,19 +215,6 @@ export default function Navbar({
                           <span>Admin Console</span>
                         </button>
                       )}
-
-                      <button
-                        onClick={() => {
-                          setUserDropdownOpen(false);
-                          if (onOpenHost) onOpenHost();
-                        }}
-                        className="w-full rounded-xl px-3 py-2 text-left text-xs text-gray-200 transition-colors hover:bg-white/10 hover:text-hotel-gold"
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <Home className="h-3.5 w-3.5 text-hotel-gold" />
-                          <span>Host your stay</span>
-                        </span>
-                      </button>
 
                       <button
                         onClick={() => {
@@ -315,7 +290,7 @@ export default function Navbar({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-x-0 top-[60px] bg-hotel-emerald-dark/95 backdrop-blur-xl border-b border-hotel-gold/30 py-6 px-6 shadow-2xl animate-fade-in">
+        <div className="equalirio-mobile-drawer lg:hidden fixed inset-x-0 top-[60px] bg-hotel-emerald-dark/95 backdrop-blur-xl border-b border-hotel-gold/30 py-6 px-6 shadow-2xl animate-fade-in">
           <nav className="flex flex-col gap-4">
             {navLinks.map((link) => (
               <a
@@ -333,7 +308,7 @@ export default function Navbar({
               <div className="flex items-center justify-between text-xs text-gray-400 notranslate py-2 border-b border-white/5" translate="no">
                 <span className="flex items-center gap-1.5 text-gray-300 font-medium notranslate" translate="no">
                   <Globe className="w-3.5 h-3.5 text-hotel-gold notranslate" />
-                  Language:
+                  Lang
                 </span>
                 <div className="flex flex-wrap gap-1.5 justify-end notranslate" translate="no">
                   {SUPPORTED_LANGUAGES.map((l) => (
@@ -422,22 +397,9 @@ export default function Navbar({
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  if (onOpenHost) onOpenHost();
-                }}
-                className="w-full rounded-xl border border-white/15 py-2.5 text-xs font-semibold uppercase tracking-wider text-gray-100 transition-colors hover:border-hotel-gold/40 hover:text-hotel-gold"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <Home className="h-4 w-4" />
-                  Become a host
-                </span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
                   onOpenBooking();
                 }}
-                className="w-full mt-2 flex items-center justify-center gap-2 bg-hotel-gold hover:bg-hotel-gold-light text-hotel-emerald-dark font-bold text-xs tracking-widest uppercase py-3 rounded-xl shadow-gold"
+                className="equalirio-nav-reserve w-full mt-2 flex items-center justify-center gap-2 bg-hotel-gold hover:bg-hotel-gold-light text-hotel-emerald-dark font-bold text-xs tracking-widest uppercase py-3 rounded-xl shadow-gold"
               >
                 <Calendar className="w-4 h-4" />
                 <span>{t('nav.reserveSuite')}</span>
