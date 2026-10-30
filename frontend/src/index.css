@@ -33,10 +33,28 @@
   box-shadow: 0 4px 18px rgba(14, 42, 34, 0.045) !important;
   color: var(--equalirio-ink);
   padding-block: 0.75rem !important;
+  min-width: 0;
 }
 
 .equalirio-site-nav {
   background-image: none !important;
+}
+@keyframes sparkle-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(180deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-sparkle-rotate {
+  animation: sparkle-rotate 1.2s ease-in-out;
 }
 
 .equalirio-site-nav button,
@@ -502,6 +520,96 @@ main > section:not(.equalirio-hero) {
   }
 }
 
+/* =====================================================
+   ZOOM-OUT / SMALL VIEWPORT RESPONSIVE FIXES
+   Prevents layout breaking when browser is zoomed out
+   ===================================================== */
+
+/* Ensure the whole site never causes horizontal scroll */
+html {
+  overflow-x: hidden;
+}
+
+/* Navbar: prevent items from overflowing at any zoom level */
+.equalirio-site-nav > div {
+  overflow: visible;
+}
+
+.equalirio-site-nav > div > div {
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+/* At smaller effective widths (zoom out), scale down navbar text */
+@media (max-width: 900px) {
+  .equalirio-site-nav nav > a {
+    font-size: 9px !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  .equalirio-site-nav .equalirio-nav-reserve span {
+    display: none;
+  }
+
+  .equalirio-site-nav .equalirio-nav-reserve {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Hero section: fluid sizing so it works from 320px to 4K */
+.equalirio-hero {
+  min-height: min(760px, 92vh);
+  padding-top: clamp(5rem, 10vw, 7rem);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+.equalirio-hero h1 {
+  font-size: clamp(1.75rem, 6vw, 5rem) !important;
+  letter-spacing: clamp(0.02em, 0.5vw, 0.05em) !important;
+  line-height: 1.12 !important;
+}
+
+.equalirio-hero > div.relative.z-10 > p:first-of-type {
+  font-size: clamp(0.9rem, 2vw, 1.5rem) !important;
+}
+
+/* Hero search box: fluid at all zoom levels */
+.equalirio-hero-search {
+  width: 100%;
+  max-width: min(900px, 95vw);
+}
+
+/* Prevent any section from overflowing horizontally */
+.equalirio-marketplace,
+.equalirio-suites,
+.equalirio-dining,
+.equalirio-reviews,
+.equalirio-faq,
+.equalirio-footer {
+  overflow-x: hidden;
+}
+
+/* Ensure containers are always properly constrained */
+.equalirio-marketplace > div,
+.equalirio-suites > div,
+.equalirio-dining > div,
+.equalirio-reviews > div {
+  max-width: 100%;
+}
+
+/* Grid cards: prevent overflow at small effective widths */
+@media (max-width: 700px) {
+  .equalirio-suites .grid,
+  .equalirio-dining .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Ensure images never overflow their containers */
+img {
+  max-width: 100%;
+  height: auto;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -570,6 +678,19 @@ main > section:not(.equalirio-hero) {
 
 .animate-fade-in {
   animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes sparkle-rotate {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(90deg) scale(1.25); }
+  50%  { transform: rotate(180deg) scale(1); }
+  75%  { transform: rotate(270deg) scale(1.25); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.animate-sparkle-rotate {
+  animation: sparkle-rotate 1.2s ease-in-out forwards !important;
+  transition: none !important;
 }
 
 /* Google Translate Background Integration — Complete Suppression of Banner & Bars */

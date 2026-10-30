@@ -4,6 +4,9 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'animate-sparkle-rotate',
+  ],
   theme: {
     extend: {
       colors: {
@@ -33,7 +36,19 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'glass-gradient': 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
-      }
+      },
+      animation: {
+        'sparkle-rotate': 'sparkle-rotate 1.2s ease-in-out forwards',
+      },
+      keyframes: {
+        'sparkle-rotate': {
+          '0%':   { transform: 'rotate(0deg) scale(1)' },
+          '25%':  { transform: 'rotate(90deg) scale(1.25)' },
+          '50%':  { transform: 'rotate(180deg) scale(1)' },
+          '75%':  { transform: 'rotate(270deg) scale(1.25)' },
+          '100%': { transform: 'rotate(360deg) scale(1)' },
+        },
+      },
     },
   },
   plugins: [],

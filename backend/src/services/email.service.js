@@ -22,89 +22,93 @@ const getResendClient = () => {
   return resend;
 };
 
-export const sendVerificationEmail = async (email, name, token) => {
-  if (!config.email.brevoApiKey) {
-    throw new Error('BREVO_API_KEY is not configured.');
-  }
-  if (!config.email.brevoSenderEmail) {
-    throw new Error('BREVO_SENDER_EMAIL is not configured with a verified Brevo sender.');
+/**
+ * Send OTP via Brevo. Falls back to Resend if Brevo is not configured.
+ */
+const sendEmailWithFallback = async ({ to, toName, subject, htmlContent }) => {
+  // --- Try Brevo first ---
+  if (config.email.brevoApiKey && config.email.brevoSenderEmail) {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'api-key': config.email.brevoApiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: {
+          name: config.email.brevoSenderName,
+          email: config.email.brevoSenderEmail,
+        },
+        to: toName ? [{ email: to, name: toName }] : [{ email: to }],
+        subject,
+        htmlContent,
+      }),
+    });
+
+    if (response.ok) return { provider: 'brevo' };
+
+    const errorBody = await response.json().catch(() => ({}));
+    console.warn(
+      `Brevo email failed (HTTP ${response.status}): ${errorBody.message || response.statusText}. Trying Resend fallback…`
+    );
   }
 
+  // --- Fallback: Resend ---
+  const client = getResendClient();
+  if (!client) {
+    throw new Error('No email provider configured. Set BREVO_API_KEY or RESEND_API_KEY in .env');
+  }
+
+  const { error } = await client.emails.send({
+    from: config.email.from || 'Equalirio Resort <onboarding@resend.dev>',
+    to: [to],
+    subject,
+    html: htmlContent,
+  });
+
+  if (error) throw new Error(`Resend error: ${error.message}`);
+  return { provider: 'resend' };
+};
+
+export const sendVerificationEmail = async (email, name, token) => {
   const verificationUrl = new URL('/', config.frontendUrl);
   verificationUrl.hash = new URLSearchParams({ verifyEmail: token }).toString();
   const safeName = escapeHTML(name);
 
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'api-key': config.email.brevoApiKey,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      sender: {
-        name: config.email.brevoSenderName,
-        email: config.email.brevoSenderEmail,
-      },
-      to: [{ email, name }],
-      subject: 'Verify your EQUALIRIO account',
-      htmlContent: `
-        <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#17352c">
-          <h1 style="color:#b4975a">Welcome to EQUALIRIO</h1>
-          <p>Hello ${safeName},</p>
-          <p>Please verify your email address to finish creating your account.</p>
-          <p><a href="${verificationUrl.toString()}" style="display:inline-block;padding:12px 20px;background:#b4975a;color:#102820;text-decoration:none;border-radius:6px">Verify email</a></p>
-          <p>This link expires in 24 hours. If you did not create an account, you can ignore this email.</p>
-        </div>
-      `,
-    }),
-  });
+  const htmlContent = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#17352c">
+      <h1 style="color:#b4975a">Welcome to EQUALIRIO</h1>
+      <p>Hello ${safeName},</p>
+      <p>Please verify your email address to finish creating your account.</p>
+      <p><a href="${verificationUrl.toString()}" style="display:inline-block;padding:12px 20px;background:#b4975a;color:#102820;text-decoration:none;border-radius:6px">Verify email</a></p>
+      <p>This link expires in 24 hours. If you did not create an account, you can ignore this email.</p>
+    </div>
+  `;
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    console.error('Brevo verification email failed:', response.status, errorBody.message || response.statusText);
-    throw new Error(`Brevo could not send the verification email (HTTP ${response.status}).`);
-  }
+  await sendEmailWithFallback({
+    to: email,
+    toName: name,
+    subject: 'Verify your EQUALIRIO account',
+    htmlContent,
+  });
 };
 
 export const sendRegistrationOtpEmail = async (email, otp) => {
-  if (!config.email.brevoApiKey) {
-    throw new Error('BREVO_API_KEY is not configured.');
-  }
-  if (!config.email.brevoSenderEmail) {
-    throw new Error('BREVO_SENDER_EMAIL is not configured with a verified Brevo sender.');
-  }
+  const htmlContent = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#17352c">
+      <h1 style="color:#b4975a">Verify your email</h1>
+      <p>Enter this code to continue creating your EQUALIRIO account:</p>
+      <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#17352c">${otp}</p>
+      <p>This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>
+    </div>
+  `;
 
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'api-key': config.email.brevoApiKey,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      sender: {
-        name: config.email.brevoSenderName,
-        email: config.email.brevoSenderEmail,
-      },
-      to: [{ email }],
-      subject: 'Your EQUALIRIO registration code',
-      htmlContent: `
-        <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#17352c">
-          <h1 style="color:#b4975a">Verify your email</h1>
-          <p>Enter this code to continue creating your EQUALIRIO account:</p>
-          <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#17352c">${otp}</p>
-          <p>This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>
-        </div>
-      `,
-    }),
+  await sendEmailWithFallback({
+    to: email,
+    subject: 'Your EQUALIRIO registration code',
+    htmlContent,
   });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    console.error('Brevo registration OTP email failed:', response.status, errorBody.message || response.statusText);
-    throw new Error(`Brevo could not send the registration code (HTTP ${response.status}).`);
-  }
 };
 
 /**

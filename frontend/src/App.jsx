@@ -211,7 +211,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-hotel-cream text-hotel-dark font-sans selection:bg-hotel-gold selection:text-hotel-emerald-dark">
+    <div className="min-h-screen bg-hotel-cream text-hotel-dark font-sans selection:bg-hotel-gold selection:text-hotel-emerald-dark" style={{overflowX: 'hidden', width: '100%'}}>
       
       {/* Sticky Header Navigation */}
       <Navbar

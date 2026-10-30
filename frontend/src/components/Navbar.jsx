@@ -20,10 +20,21 @@ export default function Navbar({
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState(() => i18n.language || 'en');
+  const [isSparkleRotating, setIsSparkleRotating] = useState(false);
 
   useEffect(() => {
     setCurrentLang(i18n.language || 'en');
   }, [i18n.language]);
+
+  const handleSparkleClick = () => {
+  if (isSparkleRotating) return;
+
+  setIsSparkleRotating(true);
+
+  setTimeout(() => {
+    setIsSparkleRotating(false);
+  }, 1200);
+};
 
   const handleLanguageChange = (langCode) => {
     i18n.changeLanguage(langCode);
@@ -56,31 +67,43 @@ export default function Navbar({
           : 'bg-black/35 py-5'
       }`}
     >
-      <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6">
-        <div className="flex items-center justify-between gap-3">
+      <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-4 lg:px-6" style={{minWidth: 0}}>
+        <div className="flex items-center justify-between gap-2" style={{minWidth: 0}}>
           
           {/* Brand Logo - Left Aligned */}
-          <a href="#" className="equalirio-brand flex items-center gap-3 group shrink-0 mr-2">
-            <div className="w-10 h-10 rounded-full border border-hotel-gold/60 flex items-center justify-center bg-hotel-emerald/40 group-hover:border-hotel-gold transition-colors">
-              <Sparkles className="w-5 h-5 text-hotel-gold group-hover:rotate-45 transition-transform duration-500" />
+          <a
+            href="#"
+            onClick={handleSparkleClick}
+            className="equalirio-brand flex items-center gap-2 group shrink-0"
+            style={{ minWidth: 0 }}
+          >
+            <div className="w-8 h-8 xl:w-10 xl:h-10 rounded-full border border-hotel-gold/60 flex items-center justify-center bg-hotel-emerald/40 group-hover:border-hotel-gold transition-colors flex-shrink-0">
+              <Sparkles
+                className={`w-4 h-4 xl:w-5 xl:h-5 text-hotel-gold ${
+                  isSparkleRotating
+                    ? "animate-sparkle-rotate"
+                    : "group-hover:rotate-45 transition-transform duration-500"
+                }`}
+                style={isSparkleRotating ? { animation: 'sparkle-rotate 1.2s ease-in-out forwards' } : {}}
+              />
             </div>
-            <div className="flex flex-col">
-              <span className="font-serif text-2xl tracking-[0.25em] font-bold text-white group-hover:text-hotel-gold transition-colors notranslate" translate="no">
+            <div className="flex flex-col min-w-0">
+              <span className="font-serif text-base xl:text-2xl tracking-[0.15em] xl:tracking-[0.25em] font-bold text-white group-hover:text-hotel-gold transition-colors notranslate truncate" translate="no">
                 {HOTEL_INFO.name}
               </span>
-              <span className="text-[9px] tracking-[0.3em] uppercase text-hotel-gold-light opacity-80 -mt-1 font-sans">
-                Resort & Spa
+              <span className="text-[7px] xl:text-[9px] tracking-[0.25em] xl:tracking-[0.3em] uppercase text-hotel-gold-light opacity-80 -mt-0.5 font-sans whitespace-nowrap">
+                Resort &amp; Spa
               </span>
             </div>
           </a>
 
           {/* Desktop Navigation Links - Centered */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 flex-1 justify-center">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-8 flex-1 justify-center min-w-0">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                className="text-xs uppercase tracking-[0.2em] text-gray-200 hover:text-hotel-gold transition-colors relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-hotel-gold hover:after:w-full after:transition-all after:duration-300"
+                className="text-[10px] xl:text-xs uppercase tracking-[0.15em] xl:tracking-[0.2em] text-gray-200 hover:text-hotel-gold transition-colors relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-hotel-gold hover:after:w-full after:transition-all after:duration-300"
               >
                 {link.name}
               </a>
@@ -88,7 +111,7 @@ export default function Navbar({
           </nav>
 
           {/* Right Actions: Currency Selector, Contact & CTA */}
-          <div className="hidden sm:flex items-center gap-3 xl:gap-4 shrink-0 ml-2 pr-1">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0 ml-1 pr-1">
             
             {/* Currency & Language Selector */}
             {/* Currency & Language Selector */}
@@ -138,9 +161,9 @@ export default function Navbar({
 
             <button
               onClick={() => onOpenBooking()}
-              className="equalirio-nav-reserve flex items-center gap-2 bg-gradient-to-r from-hotel-gold to-hotel-gold-dark hover:from-hotel-gold-light hover:to-hotel-gold text-hotel-emerald-dark font-semibold text-xs tracking-wider uppercase px-4 py-2 rounded-md shadow-gold hover:shadow-lg transition-all"
+              className="equalirio-nav-reserve flex items-center gap-1.5 bg-gradient-to-r from-hotel-gold to-hotel-gold-dark hover:from-hotel-gold-light hover:to-hotel-gold text-hotel-emerald-dark font-semibold text-[10px] xl:text-xs tracking-wider uppercase px-3 xl:px-4 py-2 rounded-md shadow-gold hover:shadow-lg transition-all whitespace-nowrap"
             >
-              <Calendar className="w-3.5 h-3.5" />
+              <Calendar className="w-3 h-3 xl:w-3.5 xl:h-3.5 flex-shrink-0" />
               <span>{t('nav.reserveSuite')}</span>
             </button>
 
@@ -268,7 +291,7 @@ export default function Navbar({
           </div>
 
           {/* Mobile Menu Toggle Button */}
-          <div className="flex lg:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-2 flex-shrink-0">
             <button
               onClick={() => onOpenBooking()}
               className="sm:hidden flex items-center gap-1 bg-hotel-gold text-hotel-emerald-dark text-[11px] font-semibold tracking-wider uppercase px-3 py-1.5 rounded-full"

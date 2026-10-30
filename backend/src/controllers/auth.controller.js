@@ -354,11 +354,14 @@ export const googleAuth = async (req, res) => {
     if (!expectedClientId) {
       return res.status(500).json({ success: false, message: "Google OAuth is not configured on the server." });
     }
-
-    if (payload.aud !== expectedClientId) {
+    // aud can be a string or array - accept any matching client ID
+    const audList = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+    const allowedIds = expectedClientId.split(",").map((id) => id.trim());
+    if (!audList.some((a) => allowedIds.includes(a))) {
+      console.error(`Google aud mismatch. Token aud: ${payload.aud} | Expected: ${expectedClientId}`);
       return res.status(401).json({
         success: false,
-        message: "Google token audience mismatch",
+        message: "Google token audience mismatch. Ensure GOOGLE_CLIENT_ID in backend .env matches the frontend.",
       });
     }
 
